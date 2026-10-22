@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reset Data — ATSC IV</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/dashboard.css"><link rel="stylesheet" href="css/forms.css"><link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<main class="page login-page">
+  <div class="login-card" style="width:min(520px,100%)">
+    <h1>RESET DATA</h1><p class="sub">AR-RANIRY TAPAK SUCI CHAMPIONSHIP IV</p>
+    <p class="notice" style="text-align:left">Halaman ini menghapus <b>semua data</b> (Fight, Seni, Loting, bagan, skor, riwayat) di browser ini. Tidak bisa dibatalkan. Gunakan <b>sebelum acara</b> untuk menghapus data contoh.</p>
+    <label class="field" style="text-align:left"><span>Ketik <b>RESET</b> untuk mengaktifkan tombol</span><input id="kw" autocomplete="off"></label>
+    <div class="actions" style="justify-content:center;flex-wrap:wrap;margin-top:14px">
+      <button class="btn btn-danger big" id="bEmpty" disabled>Mulai KOSONG (tanpa data contoh)</button>
+      <button class="btn btn-ghost" id="bDemo" disabled>Muat ulang data contoh</button>
+    </div>
+    <p class="demo-note" id="msg"></p>
+    <p class="back"><a href="index.html">‹ Kembali ke menu utama</a></p>
+  </div>
+</main>
+<script src="js/arena-data.js"></script><script src="js/seni-data.js"></script>
+<script>
+  const kw = document.getElementById('kw'), be = document.getElementById('bEmpty'), bd = document.getElementById('bDemo'), msg = document.getElementById('msg');
+  kw.addEventListener('input', () => { const ok = kw.value.trim() === 'RESET'; be.disabled = bd.disabled = !ok; });
+  function wipe() { Object.keys(localStorage).filter(k => k.indexOf('atsc4.') === 0).forEach(k => localStorage.removeItem(k)); sessionStorage.clear(); }
+  be.onclick = () => { wipe(); ATSC.save(ATSC.emptyState()); SENI.save(SENI.emptyState()); msg.textContent = 'Selesai: semua data kosong. Isi peserta lewat Loting / Data Fighter / Data Peserta Seni.'; kw.value = ''; be.disabled = bd.disabled = true; };
+  bd.onclick = () => { wipe(); ATSC.load(); SENI.load(); msg.textContent = 'Selesai: data contoh dimuat ulang.'; kw.value = ''; be.disabled = bd.disabled = true; };
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Score — ATSC IV</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/scoreboard.css">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body class="sb-page">
+<!-- LATAR ARENA OPSIONAL: assets/backgrounds/arena-background.png (lihat css/scoreboard.css) -->
+<div class="arena-bg" aria-hidden="true"></div>
+<div class="sb">
+  <header class="sb-head">
+    <span class="logo-slot" data-label="L"><img src="assets/logos/logo-left.png" alt="" onload="this.parentNode.classList.add('has-img')" onerror="this.remove()"></span>
+    <div class="sb-title"><strong>AR-RANIRY TAPAK SUCI CHAMPIONSHIP IV</strong><span>TINGKAT PROVINSI ACEH</span><em id="arenaTag"></em></div>
+    <span class="logo-slot" data-label="L"><img src="assets/logos/logo-right.png" alt="" onload="this.parentNode.classList.add('has-img')" onerror="this.remove()"></span>
+  </header>
+  <main class="sb-main">
+    <section class="side red" id="sideRed" aria-label="Pesilat Kuning">
+      <h2>PESILAT KUNING</h2>
+      <div class="ident"><b id="redName">—</b><span id="redKont"></span></div>
+      <div class="big" id="redScore">0</div><div class="pen" id="redPen"></div>
+    </section>
+    <section class="center">
+      <div class="partai">PARTAI <b id="partai">—</b></div>
+      <div class="chip" id="kategori">—</div><div class="kelas" id="kelas"></div>
+      <div class="chip babak" id="babak">BABAK</div>
+      <div class="timer" id="timer">00:00</div>
+      <div class="status" id="statusBar">BELUM ADA PARTAI</div>
+    </section>
+    <section class="side blue" id="sideBlue" aria-label="Pesilat Biru">
+      <h2>PESILAT BIRU</h2>
+      <div class="ident"><b id="blueName">—</b><span id="blueKont"></span></div>
+      <div class="big" id="blueScore">0</div><div class="pen" id="bluePen"></div>
+    </section>
+  </main>
+  <section class="winner" id="winner" hidden>
+    <div class="w-title" id="wTitle"></div><div class="w-name" id="wName"></div><div class="w-sub" id="wSub"></div>
+  </section>
+  <footer class="sb-foot"><span class="motto"><span lang="ar" dir="rtl">لا حول ولا قوة إلا بالله العلي العظيم</span> · Dengan iman dan akhlak saya menjadi kuat, tanpa iman dan akhlak saya menjadi lemah</span>
+    <a href="index.html">Menu</a><button class="btn btn-ghost" id="fsBtn" type="button">Layar penuh</button></footer>
+</div>
+<script src="js/arena-data.js"></script><script src="js/timer.js"></script><script src="js/results.js"></script><script src="js/app.js"></script><script src="js/scoreboard.js"></script>
+</body>
+</html>
