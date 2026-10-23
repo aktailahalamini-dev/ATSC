@@ -186,12 +186,6 @@ const ATSC = (() => {
         localStorage.setItem(KEY, raw);
         cacheRaw = raw;
         cacheObj = state;
-
-        // Otomatis tembak ke Firebase
-        if (typeof window !== 'undefined' && window.firebaseDb && window.firebaseRef && window.firebaseSet) {
-            window.firebaseSet(window.firebaseRef(window.firebaseDb, 'atsc_state'), state)
-                .catch(err => console.error("Gagal sinkron: ", err));
-        }
     }
     const getArena = n => load().arenas[n];
     /* Ubah data global (bukan milik satu arena), mis. peserta loting. */
@@ -222,27 +216,6 @@ const ATSC = (() => {
         return st;
     }
 
-    // Otomatis tarik data dari Firebase jika ada perubahan dari HP Juri
-    // TIDAK lagi reload otomatis - update hanya via event 'storage'
-    if (typeof window !== 'undefined') {
-        setTimeout(() => {
-            if (window.firebaseDb && window.firebaseRef && window.firebaseOnValue) {
-                window.firebaseOnValue(window.firebaseRef(window.firebaseDb, 'atsc_state'), (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        const raw = JSON.stringify(data);
-                        if (raw !== localStorage.getItem(KEY)) {
-                            localStorage.setItem(KEY, raw);
-                            cacheRaw = raw;
-                            cacheObj = data;
-                            // Dispatch event untuk notify halaman lain (tanpa reload)
-                            window.dispatchEvent(new Event('storage'));
-                        }
-                    }
-                });
-            }
-        }, 1500);
-    }
     return {
         KEY,
         RULES,
