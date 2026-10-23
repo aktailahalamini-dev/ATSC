@@ -2,14 +2,17 @@
    disimpan ke ATSC.scores[nomorJuri] pada arena sesi ini (juri lain tidak tertimpa).
    Poin sah di Live Score bila >= 2 juri menekan yang sama (lihat results.js). */
 (() => {
-  'use strict';
-  const S = ATSC_AUTH.require('juri');
-  if (!S) return;
-  const n = S.arena, no = S.no, R = ATSC.RULES, $ = UI.$;
-  UI.topbar({ title: 'JURI', session: S });
-  $('jWho').textContent = `JURI ${no}`;
+        'use strict';
+        const S = ATSC_AUTH.require('juri');
+        if (!S) return;
+        const n = S.arena,
+            no = S.no,
+            R = ATSC.RULES,
+            $ = UI.$;
+        UI.topbar({ title: 'JURI', session: S });
+        $('jWho').textContent = `JURI ${no}`;
 
-  const sideHTML = (key, label) => `<section class="jside ${key}" data-side="${key}"><h2>${label}</h2>
+        const sideHTML = (key, label) => `<section class="jside ${key}" data-side="${key}"><h2>${label}</h2>
     <div class="tech-grid">${R.techButtons.map((b, i) => `<div class="tech">
       <button class="tech-btn" data-act="tech" data-side="${key}" data-i="${i}"><span class="tl">${b.label}</span><span class="tv">${b.show}</span><span class="tc" data-c="${i}">×0</span></button>
       <button class="tech-undo" data-act="undo" data-side="${key}" data-i="${i}" aria-label="Batalkan satu ${b.label}">−1</button></div>`).join('')}</div>
@@ -67,7 +70,7 @@
       }
       rec.submittedAt = Date.now(); rec.revision++;
       return true;
-    });
+    }, 'scores/' + no);   // tulis hanya data juri ini ke Firebase
     if (!done) UI.toast('Penilaian sedang ditutup.', 'err');
     render();
   });
