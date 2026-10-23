@@ -39,20 +39,16 @@
         }
         document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 
-        /* ---------------- MONITOR (VERSI NO-REFRESH / TARGETED UPDATE) ---------------- */
+        /* ---------------- MONITOR ---------------- */
         function judgeCard(a, no) {
             const j = a.scores[no],
                 m = a.match;
-            const row = (l, f) => `<tr><th>${l}</th><td class="val-kuning">${f(j.red)}</td><td class="val-biru">${f(j.blue)}</td></tr>`;
-            return `<article class="card jcard" id="jcard-${no}" data-rev="${j.revision || 0}">
-        <h3>JURI ${no} <small>${esc(m ? m.juri[no - 1] : '')}</small></h3>
-        <span class="badge" id="badge-${no}" data-ok="${j.revision ? 1 : 0}">${j.revision ? 'Sudah Menilai' : 'Belum Menilai'}</span>
-        <table><thead><tr><th></th><th class="r">Kuning</th><th class="b">Biru</th></tr></thead><tbody>
-        ${row('nilai', s => ATSC_RESULTS.techOf(s))}
-        ${ATSC.RULES.penaltyBtns.map(b => row(b.label, s => (s[b.key][b.idx] ? 1 : 0))).join('')}
-        </tbody></table>
-        <small>Input terakhir: ${UI.fmtTime(j.submittedAt)}</small>
-    </article>`;
+            const row = (l, f) => `<tr><th>${l}</th><td>${f(j.red)}</td><td>${f(j.blue)}</td></tr>`;
+            return `<article class="card jcard"><h3>JURI ${no} <small>${esc(m ? m.juri[no - 1] : '')}</small></h3>
+      <span class="badge" data-ok="${j.revision ? 1 : 0}">${j.revision ? 'Sudah Menilai' : 'Belum Menilai'}</span>
+      <table><thead><tr><th></th><th class="r">Kuning</th><th class="b">Biru</th></tr></thead><tbody>
+      ${row('nilai', s => ATSC_RESULTS.techOf(s))}${ATSC.RULES.penaltyBtns.map(b => row(b.label, s => (s[b.key][b.idx] ? 1 : 0))).join('')}</tbody></table>
+      <small>Input terakhir: ${UI.fmtTime(j.submittedAt)}</small></article>`;
         }
 
         function renderMonitor(a, s) {
@@ -102,71 +98,9 @@
             $('lepasBtn').disabled = !m || st !== 'siap';
             const locked = !m || a.timer.running || ['selesai', 'final'].includes(st);
             UI.setHTML($('roundList'), m ? ATSC.buildRounds(m).map((r, i) => `<button class="round-opt${i === m.roundIndex ? ' active' : ''}" data-round="${i}" ${locked ? 'disabled' : ''}><span class="dot"></span>${esc(r.label)} <small>${ATSC_TIMER.fmt(r.ms)}</small></button>`).join('') : '');
-
-            // ==========================================
-            // LOGIKA TARGETED UPDATE (TANPA REFRESH)
-            // ==========================================
-            const container = $('judgeCards');
-            const existingCards = container.querySelectorAll('.jcard');
-            let needsFullRender = existingCards.length !== ATSC.RULES.judgeCount;
-
-            if (!needsFullRender) {
-                for (let i = 1; i <= ATSC.RULES.judgeCount; i++) {
-                    const existing = container.querySelector(`#jcard-${i}`);
-                    if (!existing || existing.dataset.rev != (a.scores[i].revision || 0)) {
-                        needsFullRender = true;
-                        break;
-                    }
-                }
-            }
-
-            if (needsFullRender) {
-                // Render penuh HANYA jika pertama kali load atau jumlah juri berubah
-                let h = '';
-                for (let i = 1; i <= ATSC.RULES.judgeCount; i++) h += judgeCard(a, i);
-                UI.setHTML($('judgeCards'), h);
-            } else {
-                // TARGETED UPDATE: Hanya update elemen DOM spesifik yang angkanya berubah
-                for (let i = 1; i <= ATSC.RULES.judgeCount; i++) {
-                    const j = a.scores[i];
-                    const card = container.querySelector(`#jcard-${i}`);
-
-                    if (card && j.revision != card.dataset.rev) {
-                        // 1. Update badge status
-                        const badge = card.querySelector(`#badge-${i}`);
-                        if (badge) {
-                            badge.textContent = j.revision ? 'Sudah Menilai' : 'Belum Menilai';
-                            badge.dataset.ok = j.revision ? 1 : 0;
-                        }
-
-                        // 2. Update waktu input
-                        const timeEl = card.querySelector(`#jtime-${i}`);
-                        if (timeEl) timeEl.textContent = UI.fmtTime(j.submittedAt);
-
-                        // 3. Update angka di tabel (Kuning & Biru)
-                        const rows = card.querySelectorAll('tbody tr');
-                        if (rows.length > 0) {
-                            rows[0].children[1].textContent = ATSC_RESULTS.techOf(j.red);
-                            rows[0].children[2].textContent = ATSC_RESULTS.techOf(j.blue);
-
-                            // Update flag hukuman (T1, T2, P1, P2, DIS)
-                            ATSC.RULES.penaltyBtns.forEach((b, idx) => {
-                                rows[idx + 1].children[1].textContent = j.red[b.key][b.idx] ? 1 : 0;
-                                rows[idx + 1].children[2].textContent = j.blue[b.key][b.idx] ? 1 : 0;
-                            });
-                        }
-
-                        // Tandai bahwa kartu ini sudah di-update
-                        card.dataset.rev = j.revision;
-
-                        // Efek visual halus (flash border) agar dewan tahu ada yang berubah
-                        card.style.transition = 'border-color 0.3s';
-                        card.style.borderColor = 'var(--yellow, #f5c518)';
-                        setTimeout(() => { card.style.borderColor = ''; }, 500);
-                    }
-                }
-            }
-            // ==========================================
+            let h = '';
+            for (let i = 1; i <= ATSC.RULES.judgeCount; i++) h += judgeCard(a, i);
+            UI.setHTML($('judgeCards'), h);
 
             const free = !m || st === 'final',
                 akan = s.fightList.filter(e => e.status === 'akan' && (!e.arena || e.arena === n));
@@ -181,7 +115,6 @@
                 if (akan.some(e => e.id === cur)) $('pickSel').value = cur;
             }
         }
-
         $('pickBtn').onclick = () => { if (guard() && $('pickSel').value) report(FD.tampilkan(n, $('pickSel').value, by)); };
         $('mainBtn').onclick = e => { if (!guard()) return; const act = e.currentTarget.dataset.act; if (act) report(ATSC_TIMER[act](n, by)); };
         $('roundList').onclick = e => { const b = e.target.closest('[data-round]'); if (b && !b.disabled && guard()) report(ATSC_TIMER.setRound(n, +b.dataset.round, by)); };
@@ -234,56 +167,56 @@
             const lead = sc.red.total === sc.blue.total ? 'Total sementara seimbang' : `Total sementara lebih tinggi: Sudut ${sc.red.total > sc.blue.total ? 'Kuning' : 'Biru'}`;
             const rl = ATSC_RESULTS.roundsList(a);
             const rtab = rl.length > 1 ? `<table class="list" style="margin:8px 0"><thead><tr><th>Babak</th><th class="r">Kuning</th><th class="b">Biru</th></tr></thead><tbody>${rl.map(x => `<tr><td>${esc(x.label)}${x.done ? ' (tersimpan)' : ' (berjalan)'}</td><td>${f(x.red)}</td><td>${f(x.blue)}</td></tr>`).join('')}</tbody></table>` : '';
-        const r = a.result,
-            official = r ? `<p class="official">HASIL RESMI: <b>${r.winnerSide ? esc(m[r.winnerSide].nama) + ' — Sudut ' + (r.winnerSide === 'red' ? 'Kuning' : 'Biru') : 'Seri / belum ada pemenang'}</b> · ${esc(r.basis)} · oleh ${esc(r.by)} · ${UI.fmtDateTime(r.at)}${r.correctionReason ? ' · koreksi: ' + esc(r.correctionReason) : ''}</p>` : '';
-        UI.setHTML(info, `<table class="sum"><tr><th>Partai</th><td>${esc(m.nomor)} · Arena ${n}</td><th>Status</th><td>${ATSC.STATUS[st]}</td></tr>
+            const r = a.result,
+                official = r ? `<p class="official">HASIL RESMI: <b>${r.winnerSide ? esc(m[r.winnerSide].nama) + ' — Sudut ' + (r.winnerSide === 'red' ? 'Kuning' : 'Biru') : 'Seri / belum ada pemenang'}</b> · ${esc(r.basis)} · oleh ${esc(r.by)} · ${UI.fmtDateTime(r.at)}${r.correctionReason ? ' · koreksi: ' + esc(r.correctionReason) : ''}</p>` : '';
+            UI.setHTML(info, `<table class="sum"><tr><th>Partai</th><td>${esc(m.nomor)} · Arena ${n}</td><th>Status</th><td>${ATSC.STATUS[st]}</td></tr>
       <tr><th class="r">Kuning</th><td>${esc(m.red.nama)} (${esc(m.red.kontingen)})</td><td colspan="2" class="big-n r">${f(sc.red.total)}</td></tr>
       <tr><th class="b">Biru</th><td>${esc(m.blue.nama)} (${esc(m.blue.kontingen)})</td><td colspan="2" class="big-n b">${f(sc.blue.total)}</td></tr></table>${rtab}
       <p class="muted">${lead} (hanya informasi, bukan keputusan). Juri sudah menilai: ${sc.submitted}/${ATSC.RULES.judgeCount}.</p>${official}`);
-        const can = st === 'selesai' || (st === 'final' && correcting);
-        setWForm(can);
-        note.hidden = can || st === 'final';
-        const dqSide = sc.red.dis ? 'red' : sc.blue.dis ? 'blue' : null;
-        if (can && !correcting && dqSide && autoDq !== m.uid && !document.querySelector('input[name="hasil"]:checked')) {
-            document.querySelector(`input[name="hasil"][value="${dqSide === 'red' ? 'blue' : 'red'}"]`).checked = true;
-            $('wBasis').value = 'Diskualifikasi lawan';
-            autoDq = m.uid;
+            const can = st === 'selesai' || (st === 'final' && correcting);
+            setWForm(can);
+            note.hidden = can || st === 'final';
+            const dqSide = sc.red.dis ? 'red' : sc.blue.dis ? 'blue' : null; // saran otomatis (tetap harus dikonfirmasi Dewan)
+            if (can && !correcting && dqSide && autoDq !== m.uid && !document.querySelector('input[name="hasil"]:checked')) {
+                document.querySelector(`input[name="hasil"][value="${dqSide === 'red' ? 'blue' : 'red'}"]`).checked = true;
+                $('wBasis').value = 'Diskualifikasi lawan';
+                autoDq = m.uid;
+            }
+            if (!note.hidden) note.textContent = 'Akhiri pertandingan terlebih dahulu untuk menetapkan pemenang.';
+            $('wCorrect').hidden = !(st === 'final' && !correcting);
+            $('wConfirm').hidden = !can;
+            UI.setText($('wConfirm'), correcting ? 'SIMPAN KOREKSI' : 'TETAPKAN PEMENANG');
+            $('wBy').value = by;
         }
-        if (!note.hidden) note.textContent = 'Akhiri pertandingan terlebih dahulu untuk menetapkan pemenang.';
-        $('wCorrect').hidden = !(st === 'final' && !correcting);
-        $('wConfirm').hidden = !can;
-        UI.setText($('wConfirm'), correcting ? 'SIMPAN KOREKSI' : 'TETAPKAN PEMENANG');
-        $('wBy').value = by;
-    }
-    $('wCorrect').onclick = () => {
-        correcting = true;
-        render();
-    };
-    $('wConfirm').onclick = async() => {
-        if (!guard()) return;
-        const pick = document.querySelector('input[name="hasil"]:checked');
-        if (!pick) { UI.toast('Pilih hasil pertandingan.', 'err'); return; }
-        const data = { winnerSide: pick.value === 'seri' ? null : pick.value, basis: $('wBasis').value, notes: $('wNotes').value.trim() };
-        const a = ATSC.getArena(n),
-            m = a.match,
-            sc = ATSC_RESULTS.compute(a),
-            f = ATSC_RESULTS.fmtScore;
-        const lbl = data.winnerSide ? `${esc(m[data.winnerSide].nama)} — Sudut ${data.winnerSide === 'red' ? 'Kuning' : 'Biru'}` : 'Seri / belum ada pemenang';
-        const c = await UI.confirmDialog({
-            title: 'Konfirmasi hasil resmi',
-            okText: 'Konfirmasi Hasil',
-            reason: correcting ? { label: 'Alasan koreksi', required: true } : null,
-            html: `<p>Apakah Anda yakin ingin mengonfirmasi hasil resmi pertandingan ini?</p><p class="official"><b>${lbl}</b><br>Dasar: ${esc(data.basis || '—')}</p><p>Total akhir — Kuning <b>${f(sc.red.total)}</b> : <b>${f(sc.blue.total)}</b> Biru</p>`
-        });
-        if (!c.ok) return;
-        data.reason = c.reason;
-        const r = ATSC_RESULTS.confirm(n, data, by);
-        if (r.ok) correcting = false;
-        report(r);
-    };
+        $('wCorrect').onclick = () => {
+            correcting = true;
+            render();
+        };
+        $('wConfirm').onclick = async() => {
+            if (!guard()) return;
+            const pick = document.querySelector('input[name="hasil"]:checked');
+            if (!pick) { UI.toast('Pilih hasil pertandingan.', 'err'); return; }
+            const data = { winnerSide: pick.value === 'seri' ? null : pick.value, basis: $('wBasis').value, notes: $('wNotes').value.trim() };
+            const a = ATSC.getArena(n),
+                m = a.match,
+                sc = ATSC_RESULTS.compute(a),
+                f = ATSC_RESULTS.fmtScore;
+            const lbl = data.winnerSide ? `${esc(m[data.winnerSide].nama)} — Sudut ${data.winnerSide === 'red' ? 'Kuning' : 'Biru'}` : 'Seri / belum ada pemenang';
+            const c = await UI.confirmDialog({
+                title: 'Konfirmasi hasil resmi',
+                okText: 'Konfirmasi Hasil',
+                reason: correcting ? { label: 'Alasan koreksi', required: true } : null,
+                html: `<p>Apakah Anda yakin ingin mengonfirmasi hasil resmi pertandingan ini?</p><p class="official"><b>${lbl}</b><br>Dasar: ${esc(data.basis || '—')}</p><p>Total akhir — Kuning <b>${f(sc.red.total)}</b> : <b>${f(sc.blue.total)}</b> Biru</p>`
+            });
+            if (!c.ok) return;
+            data.reason = c.reason;
+            const r = ATSC_RESULTS.confirm(n, data, by);
+            if (r.ok) correcting = false;
+            report(r);
+        };
 
-    /* ---------------- DATA FIGHTER (form) ---------------- */
-    const fieldsHTML = p => `<div class="grid">
+        /* ---------------- DATA FIGHTER (form) ---------------- */
+        const fieldsHTML = p => `<div class="grid">
       <label class="field"><span>Partai *</span><input id="${p}-partai"></label>
       <label class="field"><span>Babak</span><select id="${p}-babak"><option>1</option><option>2</option><option>3</option></select></label>
       <label class="field"><span>Kategori *</span><input id="${p}-kat" list="dl-kat"></label>
@@ -295,133 +228,133 @@
       <label class="field"><span>Timer per babak (menit) *</span><input id="${p}-timer" type="number" min="0.1" step="0.1" value="2"></label>
       <label class="field"><span>Babak tambahan (menit; 0 = tidak ada)</span><input id="${p}-tam" type="number" min="0" step="0.1" value="1"></label>
       <label class="field"><span>Arena</span><select id="${p}-arena"><option value="">Bebas (Arena 1 &amp; 2)</option><option value="1">Arena 1</option><option value="2">Arena 2</option></select></label></div>`;
-    $('addFields').innerHTML = fieldsHTML('a');
-    $('editFields').innerHTML = fieldsHTML('e');
-    const g = id => $(id);
-    const readF = p => {
-        const t = id => g(p + '-' + id).value.trim();
-        const k = FD.normKat(t('kat')) || t('kat');
-        return {
-            partai: t('partai'),
-            babak: +g(p + '-babak').value,
-            kategori: k,
-            kelas: t('kelas'),
-            red: { nama: t('redN'), kontingen: t('redK') },
-            blue: { nama: t('blueN'), kontingen: t('blueK') },
-            durasiMenit: parseFloat(g(p + '-timer').value),
-            durasiTambahanMenit: g(p + '-tam').value === '' ? 0 : parseFloat(g(p + '-tam').value),
-            arena: g(p + '-arena').value ? +g(p + '-arena').value : null
+        $('addFields').innerHTML = fieldsHTML('a');
+        $('editFields').innerHTML = fieldsHTML('e');
+        const g = id => $(id);
+        const readF = p => {
+            const t = id => g(p + '-' + id).value.trim();
+            const k = FD.normKat(t('kat')) || t('kat');
+            return {
+                partai: t('partai'),
+                babak: +g(p + '-babak').value,
+                kategori: k,
+                kelas: t('kelas'),
+                red: { nama: t('redN'), kontingen: t('redK') },
+                blue: { nama: t('blueN'), kontingen: t('blueK') },
+                durasiMenit: parseFloat(g(p + '-timer').value),
+                durasiTambahanMenit: g(p + '-tam').value === '' ? 0 : parseFloat(g(p + '-tam').value),
+                arena: g(p + '-arena').value ? +g(p + '-arena').value : null
+            };
         };
-    };
-    const fillF = (p, e) => {
-        g(p + '-partai').value = e.partai;
-        g(p + '-babak').value = e.babak;
-        g(p + '-kat').value = e.kategori;
-        g(p + '-kelas').value = e.kelas;
-        g(p + '-redN').value = e.red.nama;
-        g(p + '-redK').value = e.red.kontingen;
-        g(p + '-blueN').value = e.blue.nama;
-        g(p + '-blueK').value = e.blue.kontingen;
-        g(p + '-timer').value = e.durasiMenit;
-        g(p + '-tam').value = e.tambahan ? e.durasiTambahanMenit : 0;
-        g(p + '-arena').value = e.arena || '';
-    };
-    const resetAdd = s => {
-        ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('a-' + k).value = '');
-        g('a-partai').value = FD.nextPartai(s);
-    };
-    g('a-partai').value = FD.nextPartai(ATSC.load());
-    $('addForm').addEventListener('submit', e => {
-        e.preventDefault();
-        if (!guard()) return;
-        const r = FD.addEntry(n, readF('a'), by);
-        showErr('addErr', r.ok ? [] : r.errors);
-        if (r.ok) {
-            UI.toast(r.msg, 'ok');
-            resetAdd(ATSC.load());
+        const fillF = (p, e) => {
+            g(p + '-partai').value = e.partai;
+            g(p + '-babak').value = e.babak;
+            g(p + '-kat').value = e.kategori;
+            g(p + '-kelas').value = e.kelas;
+            g(p + '-redN').value = e.red.nama;
+            g(p + '-redK').value = e.red.kontingen;
+            g(p + '-blueN').value = e.blue.nama;
+            g(p + '-blueK').value = e.blue.kontingen;
+            g(p + '-timer').value = e.durasiMenit;
+            g(p + '-tam').value = e.tambahan ? e.durasiTambahanMenit : 0;
+            g(p + '-arena').value = e.arena || '';
+        };
+        const resetAdd = s => {
+            ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('a-' + k).value = '');
+            g('a-partai').value = FD.nextPartai(s);
+        };
+        g('a-partai').value = FD.nextPartai(ATSC.load());
+        $('addForm').addEventListener('submit', e => {
+            e.preventDefault();
+            if (!guard()) return;
+            const r = FD.addEntry(n, readF('a'), by);
+            showErr('addErr', r.ok ? [] : r.errors);
+            if (r.ok) {
+                UI.toast(r.msg, 'ok');
+                resetAdd(ATSC.load());
+                render();
+            } else UI.toast('Periksa isian.', 'err');
+        });
+        $('e-pick').onchange = () => {
+            editSig = '';
             render();
-        } else UI.toast('Periksa isian.', 'err');
-    });
-    $('e-pick').onchange = () => {
-        editSig = '';
-        render();
-    };
-    $('editForm').addEventListener('submit', e => {
-        e.preventDefault();
-        if (!guard() || !$('e-pick').value) return;
-        const r = FD.updateEntry(n, $('e-pick').value, readF('e'), by);
-        showErr('editErr', r.ok ? [] : r.errors);
-        if (r.ok) {
-            editSig = '';
-            UI.toast(r.msg, 'ok');
-            render();
-        } else UI.toast(r.msg, 'err');
-    });
-    $('e-del').onclick = async() => {
-        if (!guard() || !$('e-pick').value) return;
-        const c = await UI.confirmDialog({ title: 'Hapus partai?', okText: 'Hapus', html: '<p>Partai akan dihapus dari daftar.</p>' });
-        if (c.ok) {
-            editSig = '';
-            report(FD.removeEntry(n, $('e-pick').value, by));
-        }
-    };
-
-    function renderData(s) {
-        const opts = s.fightList.filter(e => e.status === 'akan'),
-            key = opts.map(e => e.id + e.partai).join(',');
-        if (editKey !== key) {
-            const cur = $('e-pick').value;
-            editKey = key;
-            $('e-pick').innerHTML = opts.map(e => `<option value="${esc(e.id)}">${esc(label(e))}</option>`).join('') || '<option value="">(tidak ada partai "akan bertanding")</option>';
-            if (opts.some(e => e.id === cur)) $('e-pick').value = cur;
-            editSig = '';
-        }
-        const e = opts.find(x => x.id === $('e-pick').value);
-        if (e) {
-            const sig = JSON.stringify(e);
-            if (editSig !== sig) {
-                fillF('e', e);
-                editSig = sig;
+        };
+        $('editForm').addEventListener('submit', e => {
+            e.preventDefault();
+            if (!guard() || !$('e-pick').value) return;
+            const r = FD.updateEntry(n, $('e-pick').value, readF('e'), by);
+            showErr('editErr', r.ok ? [] : r.errors);
+            if (r.ok) {
+                editSig = '';
+                UI.toast(r.msg, 'ok');
+                render();
+            } else UI.toast(r.msg, 'err');
+        });
+        $('e-del').onclick = async() => {
+            if (!guard() || !$('e-pick').value) return;
+            const c = await UI.confirmDialog({ title: 'Hapus partai?', okText: 'Hapus', html: '<p>Partai akan dihapus dari daftar.</p>' });
+            if (c.ok) {
+                editSig = '';
+                report(FD.removeEntry(n, $('e-pick').value, by));
             }
+        };
+
+        function renderData(s) {
+            const opts = s.fightList.filter(e => e.status === 'akan'),
+                key = opts.map(e => e.id + e.partai).join(',');
+            if (editKey !== key) {
+                const cur = $('e-pick').value;
+                editKey = key;
+                $('e-pick').innerHTML = opts.map(e => `<option value="${esc(e.id)}">${esc(label(e))}</option>`).join('') || '<option value="">(tidak ada partai "akan bertanding")</option>';
+                if (opts.some(e => e.id === cur)) $('e-pick').value = cur;
+                editSig = '';
+            }
+            const e = opts.find(x => x.id === $('e-pick').value);
+            if (e) {
+                const sig = JSON.stringify(e);
+                if (editSig !== sig) {
+                    fillF('e', e);
+                    editSig = sig;
+                }
+            }
+            $('editNote').hidden = !(e && e.ref);
+            ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('e-' + k).disabled = !e || !!e.ref);
+            ['partai', 'babak', 'timer', 'tam', 'arena'].forEach(k => g('e-' + k).disabled = !e);
+            $('e-del').disabled = !e || !!e.ref;
+            const kl = [...new Set([...s.fightList.map(x => x.kelas), ...s.loting.peserta.map(p => p.kelas)])];
+            UI.setHTML($('dl-kelas'), kl.map(k => `<option value="${esc(k)}">`).join(''));
         }
-        $('editNote').hidden = !(e && e.ref);
-        ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('e-' + k).disabled = !e || !!e.ref);
-        ['partai', 'babak', 'timer', 'tam', 'arena'].forEach(k => g('e-' + k).disabled = !e);
-        $('e-del').disabled = !e || !!e.ref;
-        const kl = [...new Set([...s.fightList.map(x => x.kelas), ...s.loting.peserta.map(p => p.kelas)])];
-        UI.setHTML($('dl-kelas'), kl.map(k => `<option value="${esc(k)}">`).join(''));
-    }
 
-    /* ---------------- DATA RIWAYAT ---------------- */
-    document.querySelectorAll('#filters [data-f]').forEach(b => b.onclick = () => {
-        filter = b.dataset.f;
-        document.querySelectorAll('#filters [data-f]').forEach(x => x.classList.toggle('active', x === b));
-        render();
-    });
+        /* ---------------- DATA RIWAYAT ---------------- */
+        document.querySelectorAll('#filters [data-f]').forEach(b => b.onclick = () => {
+            filter = b.dataset.f;
+            document.querySelectorAll('#filters [data-f]').forEach(x => x.classList.toggle('active', x === b));
+            render();
+        });
 
-    function renderRiwayat(a, s) {
-        const st = FD.stats(s);
-        UI.setText($('stAll'), st.total);
-        UI.setText($('stAkan'), st.akan);
-        UI.setText($('stSudah'), st.sudah);
-        const rows = s.fightList.filter(e => filter === 'semua' || (filter === 'sudah' ? e.status === 'sudah' : e.status !== 'sudah'));
-        UI.setHTML($('histTable'), rows.length ? `<table class="list"><thead><tr><th>partai</th><th>nama</th><th>kontingen</th><th>kategori</th><th>kelas</th><th>tanggal</th><th>nilai</th><th>status</th><th>cetak</th></tr></thead><tbody>${rows.map(e => `<tr>
+        function renderRiwayat(a, s) {
+            const st = FD.stats(s);
+            UI.setText($('stAll'), st.total);
+            UI.setText($('stAkan'), st.akan);
+            UI.setText($('stSudah'), st.sudah);
+            const rows = s.fightList.filter(e => filter === 'semua' || (filter === 'sudah' ? e.status === 'sudah' : e.status !== 'sudah'));
+            UI.setHTML($('histTable'), rows.length ? `<table class="list"><thead><tr><th>partai</th><th>nama</th><th>kontingen</th><th>kategori</th><th>kelas</th><th>tanggal</th><th>nilai</th><th>status</th><th>cetak</th></tr></thead><tbody>${rows.map(e => `<tr>
       <td>${esc(e.partai)}</td><td><span class="r">${esc(e.red.nama)}</span> vs <span class="b">${esc(e.blue.nama)}</span></td><td>${esc(e.red.kontingen)} / ${esc(e.blue.kontingen)}</td><td>${esc(e.kategori)}</td><td>${esc(e.kelas)}</td>
       <td>${dateStr(e.tanggal)}</td><td>${e.hasil ? e.hasil.red + ' : ' + e.hasil.blue : '—'}</td>
       <td>${e.status === 'sudah' ? 'Sudah' : e.status === 'tampil' ? 'Sedang tampil (Arena ' + e.arena + ')' : 'Akan · ' + (e.arena ? 'Arena ' + e.arena : 'Bebas')}</td>
       <td>${e.status === 'sudah' ? `<button class="btn btn-ghost" data-print="${esc(e.id)}">Cetak</button>` : e.status === 'akan' && (!e.arena || e.arena === n) ? `<button class="btn btn-ghost" data-show="${esc(e.id)}">Tampilkan</button>` : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Belum ada data.</p>');
-        UI.setHTML($('auditList'), a.audit.length ? `<table class="list"><tbody>${a.audit.slice(0, 40).map(x => `<tr><td>${UI.fmtDateTime(x.at)}</td><td>${esc(x.by)}</td><td>${esc(x.action)}</td><td>${esc(x.detail)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Belum ada aktivitas.</p>');
-    }
-    $('histTable').addEventListener('click', e => {
-        const sb = e.target.closest('[data-show]'), pb = e.target.closest('[data-print]');
-        if (sb && guard()) { const r = FD.tampilkan(n, sb.dataset.show, by); if (r.ok) showTab('monitor'); report(r); }
-        if (pb) printEntry(ATSC.load().fightList.find(x => x.id === pb.dataset.print));
-    });
-    function printEntry(e) {
-        if (!e || !e.hasil) return;
-        const w = window.open('', '_blank'); if (!w) { UI.toast('Pop-up diblokir browser. Izinkan pop-up untuk mencetak.', 'err'); return; }
-        const win = e.hasil.winnerSide ? esc(e[e.hasil.winnerSide].nama) + ' — Sudut ' + (e.hasil.winnerSide === 'red' ? 'Kuning' : 'Biru') : 'Seri / belum ada pemenang';
-        w.document.write(`<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Hasil Partai ${esc(e.partai)}</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#000}h1{font-size:18px;margin:0}h2{margin:6px 0 18px;font-size:14px;font-weight:normal}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid #000;padding:6px 10px;text-align:left}.t{font-size:20px;font-weight:bold}</style></head><body>
+    UI.setHTML($('auditList'), a.audit.length ? `<table class="list"><tbody>${a.audit.slice(0, 40).map(x => `<tr><td>${UI.fmtDateTime(x.at)}</td><td>${esc(x.by)}</td><td>${esc(x.action)}</td><td>${esc(x.detail)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Belum ada aktivitas.</p>');
+  }
+  $('histTable').addEventListener('click', e => {
+    const sb = e.target.closest('[data-show]'), pb = e.target.closest('[data-print]');
+    if (sb && guard()) { const r = FD.tampilkan(n, sb.dataset.show, by); if (r.ok) showTab('monitor'); report(r); }
+    if (pb) printEntry(ATSC.load().fightList.find(x => x.id === pb.dataset.print));
+  });
+  function printEntry(e) {
+    if (!e || !e.hasil) return;
+    const w = window.open('', '_blank'); if (!w) { UI.toast('Pop-up diblokir browser. Izinkan pop-up untuk mencetak.', 'err'); return; }
+    const win = e.hasil.winnerSide ? esc(e[e.hasil.winnerSide].nama) + ' — Sudut ' + (e.hasil.winnerSide === 'red' ? 'Kuning' : 'Biru') : 'Seri / belum ada pemenang';
+    w.document.write(`<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Hasil Partai ${esc(e.partai)}</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#000}h1{font-size:18px;margin:0}h2{margin:6px 0 18px;font-size:14px;font-weight:normal}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid #000;padding:6px 10px;text-align:left}.t{font-size:20px;font-weight:bold}</style></head><body>
       <h1>AR-RANIRY TAPAK SUCI CHAMPIONSHIP IV</h1><h2>TINGKAT PROVINSI ACEH — Fight · Arena ${e.arena || '-'}</h2>
       <p><b>Partai ${esc(e.partai)}</b> · ${esc(e.kategori)} · ${esc(e.kelas)}<br>Tanggal: ${dateStr(e.tanggal)}</p>
       <table><tr><th>Sudut</th><th>Pesilat</th><th>Kontingen</th><th>Skor</th></tr>
@@ -429,25 +362,25 @@
       <tr><td>Biru</td><td>${esc(e.blue.nama)}</td><td>${esc(e.blue.kontingen)}</td><td>${e.hasil.blue}</td></tr></table>
       ${(e.hasil.rounds || []).length > 1 ? `<table><tr><th>Babak</th><th>Kuning</th><th>Biru</th></tr>${e.hasil.rounds.map(x => `<tr><td>${esc(x.label)}</td><td>${x.red}</td><td>${x.blue}</td></tr>`).join('')}<tr><th>TOTAL</th><th>${e.hasil.red}</th><th>${e.hasil.blue}</th></tr></table>` : ''}
       <p class="t">PEMENANG: ${win}</p><p>Dasar keputusan: ${esc(e.hasil.basis)}</p><p>Dewan: ${esc(by)}</p><script>window.onload=()=>window.print()<\/script></body></html>`);
-        w.document.close();
-    }
+    w.document.close();
+  }
 
-    /* ---------------- BAGAN FIGHTER ---------------- */
-    $('bgSel').onchange = () => { bgKey = ''; render(); };
-    function renderBagan(s) {
-        const keys = Object.keys((s && s.loting && s.loting.draws) || {}), sig = keys.join('|');
-        if ($('bgSel')._k !== sig) { const cur = $('bgSel').value; $('bgSel')._k = sig;
-            $('bgSel').innerHTML = keys.map(k => `<option value="${esc(k)}">${esc(s.loting.draws[k].kategori)} — ${esc(s.loting.draws[k].kelas)}</option>`).join(''); if (keys.includes(cur)) $('bgSel').value = cur; }
-        $('bgNone').hidden = keys.length > 0; $('bgSel').parentNode.hidden = !keys.length;
-        const d = s.loting.draws[$('bgSel').value];
-        UI.setHTML($('bgView'), d ? BAGAN.render(d, FD.pmap(s), s.fightList) : '');
-    }
+  /* ---------------- BAGAN FIGHTER ---------------- */
+  $('bgSel').onchange = () => { bgKey = ''; render(); };
+  function renderBagan(s) {
+   const keys = Object.keys((s && s.loting && s.loting.draws) || {}), sig = keys.join('|');
+    if ($('bgSel')._k !== sig) { const cur = $('bgSel').value; $('bgSel')._k = sig;
+      $('bgSel').innerHTML = keys.map(k => `<option value="${esc(k)}">${esc(s.loting.draws[k].kategori)} — ${esc(s.loting.draws[k].kelas)}</option>`).join(''); if (keys.includes(cur)) $('bgSel').value = cur; }
+    $('bgNone').hidden = keys.length > 0; $('bgSel').parentNode.hidden = !keys.length;
+    const d = s.loting.draws[$('bgSel').value];
+    UI.setHTML($('bgView'), d ? BAGAN.render(d, FD.pmap(s), s.fightList) : '');
+  }
 
-    function render() {
-        let a = ATSC.getArena(n);
-        if (ATSC_TIMER.needsSettle(a)) { ATSC_TIMER.settle(n); a = ATSC.getArena(n); }
-        const s = ATSC.load();
-        renderMonitor(a, s); renderResult(a); renderData(s); renderRiwayat(a, s); renderBagan(s);
-    }
-    showTab('monitor'); UI.every(render, 250);
+  function render() {
+    let a = ATSC.getArena(n);
+    if (ATSC_TIMER.needsSettle(a)) { ATSC_TIMER.settle(n); a = ATSC.getArena(n); }
+    const s = ATSC.load();
+    renderMonitor(a, s); renderResult(a); renderData(s); renderRiwayat(a, s); renderBagan(s);
+  }
+  showTab('monitor'); UI.every(render, 250);
 })();
