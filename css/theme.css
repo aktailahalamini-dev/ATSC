@@ -1,0 +1,299 @@
+/* =====================================================================
+   theme.css — TAMPILAN AKHIR (dimuat paling terakhir di semua halaman)
+   Berisi: ukuran logo, skala ukuran halaman, animasi tombol & kartu,
+   dan penyesuaian layar. Mau ubah tampilan? Cukup edit file ini.
+   ===================================================================== */
+:root {
+  /* ======== UKURAN LOGO — ubah angka (px) di sini bila perlu ========
+     Logo cukup ditaruh di folder assets/logos/ dengan nama file yang benar.
+     Gambar otomatis pas di dalam kotak (tidak terpotong/gepeng).         */
+  --logo-topbar: 52px;       /* bar atas halaman Dewan/Juri/Loting  (logo-left.png / logo-tps.png) */
+  --logo-home: 76px;         /* logo kiri & kanan di halaman utama & login (logo-left.png, logo-right.png) */
+  --logo-home-main: 112px;   /* logo utama event di tengah (event-logo.png) */
+  --logo-board: 84px;        /* logo kiri & kanan di papan skor Live Score */
+
+  --glow-gold: 0 0 22px rgba(212, 167, 44, .35);
+  --card-bg: linear-gradient(180deg, rgba(20, 32, 66, .78), rgba(9, 15, 34, .86));
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* ---------- skala umum: tidak terlalu besar, menyesuaikan layar ---------- */
+html { font-size: 15px; }
+@media (min-width: 1700px) { html { font-size: 16px; } }
+@media (max-width: 520px) { html { font-size: 14px; } }
+
+/* ---------- latar bergerak halus ---------- */
+body { background-image: linear-gradient(160deg, rgba(10, 18, 38, .9), rgba(5, 8, 15, .96)), repeating-linear-gradient(135deg, rgba(212, 167, 44, .045) 0 2px, transparent 2px 28px); }
+body::before { animation: drift 24s ease-in-out infinite alternate; background-size: 140% 140%; }
+@keyframes drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-1.5%, 1%, 0) scale(1.06); } }
+@keyframes shimmer { from { background-position: 0 0; } to { background-position: 200% 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(47, 227, 138, .65); } 100% { box-shadow: 0 0 0 .7em rgba(47, 227, 138, 0); } }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.14); } 100% { transform: scale(1); } }
+@keyframes ripple { to { transform: scale(3.2); opacity: 0; } }
+
+/* ---------- logo: kotak siap pakai ---------- */
+.logo-slot { width: var(--logo-home); height: var(--logo-home); border-width: 2px; transition: transform .3s var(--ease); }
+.logo-slot.big { width: var(--logo-home-main); height: var(--logo-home-main); }
+.topbar .logo-slot { width: var(--logo-topbar); height: var(--logo-topbar); }
+.sb-head .logo-slot { width: var(--logo-board); height: var(--logo-board); }
+.logo-slot img { object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .55)); }
+.logo-slot:hover { transform: scale(1.06) rotate(-2deg); }
+
+/* ---------- tombol: bergerak, berkilau, terasa ditekan ---------- */
+.btn, .tech-btn, .pen-btn, .keypad button, .round-opt, .dw-nav button { position: relative; overflow: hidden; isolation: isolate; transition: transform .18s var(--ease), box-shadow .25s, background .25s, border-color .25s, color .25s; -webkit-tap-highlight-color: transparent; }
+.btn { border-radius: 12px; padding: 8px 15px; font-size: .9rem; letter-spacing: .02em; }
+.btn::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .38) 50%, transparent 70%); transform: translateX(-130%); transition: transform .65s var(--ease); }
+.btn:hover:not(:disabled)::before { transform: translateX(130%); }
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212, 167, 44, .28); }
+.btn:active:not(:disabled), .tech-btn:active:not(:disabled), .pen-btn:active:not(:disabled), .keypad button:active:not(:disabled) { transform: scale(.95); }
+.btn-primary { background: linear-gradient(135deg, var(--gold-2), var(--gold) 55%, #b98a10); border-color: transparent; box-shadow: 0 4px 16px rgba(212, 167, 44, .35); }
+.btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #fff0b8, var(--gold-2) 55%, var(--gold)); box-shadow: 0 10px 26px rgba(212, 167, 44, .5); }
+.btn-danger:hover:not(:disabled) { box-shadow: 0 8px 22px rgba(214, 40, 57, .35); }
+.btn.big { padding: 11px 20px; font-size: 1rem; }
+.btn:focus-visible { box-shadow: 0 0 0 3px rgba(243, 210, 122, .55); }
+.rip { position: absolute; border-radius: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; background: rgba(255, 255, 255, .45); pointer-events: none; transform: scale(0); animation: ripple .6s ease-out forwards; z-index: 0; }
+.tech-btn:hover:not(:disabled), .pen-btn:hover:not(:disabled), .keypad button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .4); }
+.jside.red .tech-btn:hover:not(:disabled) { box-shadow: 0 0 22px rgba(214, 40, 57, .45); } .jside.blue .tech-btn:hover:not(:disabled) { box-shadow: 0 0 22px rgba(31, 95, 214, .5); }
+.pen-btn.on, .pill.on { transform: scale(1.04); }
+.dw-nav button:hover:not(.active) { transform: translateX(4px); border-color: var(--gold); }
+.dw-nav button.active { box-shadow: var(--glow-gold); }
+.round-opt:hover:not(:disabled) { transform: translateX(3px); border-color: var(--gold); }
+
+/* ---------- kartu kaca ---------- */
+.card, .login-card, .modal, .stat, .j-box, .j-mid, .lot-box, .sj-col, .jside, .d-panel, .d-total, .sn-total, .center, .side, .sn-panel {
+  background: var(--card-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(212, 167, 44, .32); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 10px 28px rgba(0, 0, 0, .35); }
+.side.red { border-color: var(--red); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 0 30px rgba(214, 40, 57, .25); }
+.side.blue { border-color: var(--blue); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 0 30px rgba(31, 95, 214, .3); }
+.card { padding: 12px 15px; margin-bottom: 12px; border-radius: 16px; }
+.card h2 { font-size: 1.02rem; letter-spacing: .05em; }
+.card:not(.jcard), .login-card, .arena-choice > *, .role-choice > *, .brand, .slogan, .lot-box { animation: rise .55s var(--ease) backwards; }
+.arena-choice > *:nth-child(2), .role-choice > *:nth-child(2) { animation-delay: .08s; }
+.arena-choice > *:nth-child(3), .role-choice > *:nth-child(3) { animation-delay: .16s; }
+.modal { animation: pop .25s var(--ease); } .toast { animation: rise .3s var(--ease); }
+input, select, textarea { padding: 8px 11px; border-radius: 10px; transition: border-color .2s, box-shadow .2s; }
+input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(212, 167, 44, .22); }
+
+/* ---------- bar atas ---------- */
+.topbar { position: sticky; top: 0; z-index: 30; padding: 8px 16px; border-bottom: 0; backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(16, 26, 56, .97), rgba(8, 13, 30, .94)); box-shadow: 0 8px 24px rgba(0, 0, 0, .4); }
+.topbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), var(--gold-2), var(--gold), transparent); background-size: 200% 100%; animation: shimmer 7s linear infinite; }
+.tb-title strong { font-size: .95rem; }
+
+/* ---------- status berdenyut ---------- */
+.status[data-st="berlangsung"]::before, .chip-st[data-st="berlangsung"]::before { content: ""; display: inline-block; width: .6em; height: .6em; margin-right: .5em; border-radius: 50%; background: #2fe38a; animation: pulse 1.2s infinite; }
+.timer { text-shadow: 0 0 24px rgba(243, 210, 122, .3); }
+.timer.low { animation: bump 1s infinite; text-shadow: 0 0 26px rgba(255, 90, 105, .6); }
+.bump { animation: bump .5s var(--ease); }
+
+/* ---------- halaman utama / arena / login: ringkas ---------- */
+.page { max-width: 900px; padding: 16px 16px 4px; }
+.logo-row { gap: 14px; margin-bottom: 8px; }
+.brand h1, .login-card h1 { font-size: clamp(1.2rem, 3.2vw, 1.9rem); background: linear-gradient(180deg, #fff3c4, var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { font-size: .8rem; }
+.arena-title { font-size: clamp(1.4rem, 4vw, 2.1rem); margin-top: 10px; color: var(--gold-2); }
+.arena-choice, .role-choice { gap: 16px; margin: 20px auto 14px; max-width: 760px; }
+.role-choice { max-width: 840px; }
+.arena-card, .role-card { padding: 22px 16px; border-radius: 20px; transition: transform .3s var(--ease), box-shadow .3s, border-color .3s; }
+.arena-card h2, .role-card h2 { font-size: clamp(1.35rem, 2.8vw, 1.8rem); }
+.arena-card:hover, .role-card:hover { transform: translateY(-6px) scale(1.015); box-shadow: 0 18px 40px rgba(0, 0, 0, .5), var(--glow-gold); }
+.arena-card:active, .role-card:active { transform: scale(.98); }
+.arena-card::after, .role-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .12) 50%, transparent 65%); transform: translateX(-120%); transition: transform .8s var(--ease); pointer-events: none; }
+.arena-card:hover::after, .role-card:hover::after { transform: translateX(120%); }
+.ghost-num { font-size: 7rem; top: -14px; }
+.slogan { font-size: .98rem; margin: 4px 0; } .slogan.ar { font-size: 1.3rem; } .slogan.sm { font-size: .85rem; }
+.site-foot { padding: 10px; margin-top: 14px; font-size: .85rem; }
+.login-card { padding: 22px 20px; } .login-card form { gap: 10px; }
+
+/* ---------- papan skor: pas satu layar ---------- */
+@media (min-width: 900px) and (min-height: 480px) {
+  .sb { height: 100vh; min-height: 0; padding: 8px 12px; gap: 8px; overflow: hidden; }
+  .sb-main, .sn-main { min-height: 0; }
+  .side, .sn-panel, .center { min-height: 0; }
+  .sb-title strong { font-size: clamp(.95rem, 2.1vw, 1.7rem); }
+  .side h2 { padding: 5px; font-size: clamp(1rem, 1.9vw, 1.45rem); }
+  .ident b { font-size: clamp(1.2rem, min(2.9vw, 5.2vh), 2.5rem); }
+  .big { font-size: clamp(4rem, min(36vh, 19vw), 17rem); }
+  .pen { padding: 6px 10px; gap: 6px 10px; }
+  .pen .pill, .pill { font-size: clamp(.8rem, 1.7vh, 1.15rem); padding: 4px 9px; }
+  .center .timer { font-size: clamp(2.8rem, min(13vh, 8vw), 7rem); }
+  .center { gap: 8px; padding: 10px 8px; }
+  .partai { font-size: clamp(1.2rem, 2.6vw, 2.1rem); }
+  .sn-main { gap: 8px; } .sn-who b { font-size: clamp(1.2rem, min(3vw, 5vh), 2.4rem); }
+  .sn-mid .timer { font-size: clamp(2.6rem, min(11vh, 7vw), 6rem); }
+  .sn-panel .big { font-size: clamp(4rem, min(34vh, 15vw), 14rem); }
+  .sn-total { padding: 6px 22px; font-size: clamp(1.1rem, 2.6vw, 2.1rem); }
+}
+.big { background: linear-gradient(180deg, #fff, #c9d4f2); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
+.side.red .big { filter: drop-shadow(0 0 22px rgba(214, 40, 57, .5)); } .side.blue .big { filter: drop-shadow(0 0 22px rgba(31, 95, 214, .55)); }
+.sn-panel .big { filter: drop-shadow(0 0 22px rgba(212, 167, 44, .4)); }
+.winner { animation: pop .5s var(--ease); box-shadow: 0 0 40px rgba(212, 167, 44, .35); }
+.sb-foot .btn { padding: 3px 11px; font-size: .8rem; }
+
+/* ---------- remot juri: muat di layar tablet/HP ---------- */
+.j-wrap { padding: 8px 10px; }
+.j-head, .sj-head { gap: 8px; margin-bottom: 8px; } .j-box, .j-mid { padding: 6px 10px; border-radius: 12px; }
+.j-box b { font-size: 1.5rem; } .j-mid .timer { font-size: 2.1rem; }
+.tech-btn { min-height: clamp(66px, 15vh, 116px); border-radius: 14px; } .tech-btn .tv { font-size: clamp(1.8rem, 5vh, 2.6rem); } .tech-btn .tl { font-size: .95rem; }
+.pen-btn { min-height: clamp(42px, 8vh, 58px); font-size: 1.35rem; border-radius: 12px; }
+.pen-row { margin-top: 8px; padding-top: 8px; } .jside { padding: 8px; } .jside h2 { margin-bottom: 6px; }
+.tech-grid { gap: 8px; } .j-send { padding: 8px 12px; border-radius: 12px; }
+.keypad button { min-height: clamp(40px, 7vh, 58px); font-size: 1.45rem; border-radius: 12px; } .keypad { gap: 6px; }
+.sj-disp { font-size: 2.3rem; min-height: 2.8rem; } .sj-col { padding: 8px; gap: 6px; } .sj-col h2 { font-size: 1.05rem; }
+
+/* ---------- Dewan: lebih ringkas ---------- */
+.dw-layout { grid-template-columns: 190px 1fr; min-height: calc(100vh - 60px); }
+.dw-nav { padding: 12px 10px; gap: 8px; position: sticky; top: 56px; align-self: start; height: calc(100vh - 56px); overflow: auto; }
+.dw-nav button { padding: 10px 11px; font-size: .82rem; border-radius: 11px; }
+.dw-main { padding: 12px 14px; }
+.mon-side { padding: 8px; border-radius: 12px; } .mon-side .num { font-size: 3rem; } .mon-side b { font-size: 1.08rem; }
+.mon-mid .timer { font-size: 2.3rem; } .mon-top { gap: 12px; } .ctrl-card { gap: 9px; }
+.d-panel .num { font-size: clamp(3rem, 9vh, 4.6rem); } .d-total b { font-size: 2.4rem; } .d-total span { font-size: 1.2rem; }
+.dsm-info .timer { font-size: 3rem; } .dsm-ctl .btn.big { min-height: 70px; min-width: 170px; }
+.judge-cards { gap: 10px; } .jcard { padding: 10px 12px; }
+.stat b { font-size: 2.4rem; } .big-n { font-size: 1.6rem; }
+@media (max-width: 860px) { .dw-layout { grid-template-columns: 1fr; } .dw-nav { position: static; height: auto; flex-direction: row; flex-wrap: wrap; } }
+
+/* ---------- bagan & loting: TANPA BATAS jumlah peserta ---------- */
+.lot-wrap { max-width: 1500px; padding: 12px; }
+.lot-box { max-height: none; overflow: visible; min-height: 160px; }
+.bracket { min-height: 0; overflow-x: auto; }
+.zoom-bar { display: flex; gap: 8px; align-items: center; margin: 6px 0 4px; flex-wrap: wrap; } .zoom-bar .zv { min-width: 3.2em; text-align: center; color: var(--muted); font-weight: 700; }
+.zoom-bar .btn { padding: 4px 12px; }
+.b-match { transition: transform .2s var(--ease), box-shadow .2s; } .b-match:hover { transform: scale(1.03); box-shadow: 0 6px 18px rgba(0, 0, 0, .45), var(--glow-gold); z-index: 2; }
+.b-slot.win { background: linear-gradient(90deg, rgba(47, 179, 107, .28), rgba(47, 179, 107, .08)); }
+.b-col:not(:last-child) .b-match::after { content: ""; position: absolute; right: -15px; top: 50%; width: 15px; border-top: 2px solid var(--line); }
+.b-col:not(:first-child) .b-match::before { content: ""; position: absolute; left: -15px; top: 50%; width: 15px; border-top: 2px solid var(--line); }
+
+/* =====================================================================
+   TAMBAHAN: tengah layar, manik-manik, maskot timer, remot juri pas layar
+   ===================================================================== */
+
+/* ---------- dasbor: isi berada di TENGAH layar (tidak terlalu ke atas) ---------- */
+.page.home > .brand { margin-top: auto; }
+.page.home > .site-foot { margin-top: auto; }
+.page.home { padding-top: 12px; }
+.page.home .arena-choice, .page.home .role-choice { margin-top: 22px; }
+.login-page { padding: 12px 16px; }
+
+/* ---------- hiasan sederhana & elegan (tidak ramai) ----------
+   1) garis emas dengan belah ketupat kecil di bawah judul
+   2) siku emas tipis di sudut kartu menu
+   3) cahaya napas lembut di logo utama                                   */
+.brand .sub::after { content: "◆"; display: block; width: min(260px, 60%); margin: 10px auto 0; text-align: center; font-size: .7rem; line-height: 10px; color: var(--gold);
+  background: linear-gradient(90deg, transparent, rgba(212, 167, 44, .75)) left center / calc(50% - 14px) 1px no-repeat,
+              linear-gradient(90deg, rgba(212, 167, 44, .75), transparent) right center / calc(50% - 14px) 1px no-repeat; }
+.arena-card::before, .role-card::before { content: ""; position: absolute; inset: 10px; pointer-events: none; opacity: .65;
+  background:
+    linear-gradient(var(--gold), var(--gold)) top left / 16px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) top left / 2px 16px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) bottom right / 16px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) bottom right / 2px 16px no-repeat; }
+.logo-slot.big { animation: breathe 5s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(212, 167, 44, 0), 0 0 12px rgba(212, 167, 44, .12); } 50% { box-shadow: 0 0 0 5px rgba(212, 167, 44, .08), 0 0 30px rgba(212, 167, 44, .32); } }
+
+/* ---------- Live Score: maskot di panel timer lebih besar & ke tengah ---------- */
+.center::before { inset: 3% 2%; opacity: .22; background-position: center center; background-size: contain; filter: drop-shadow(0 0 20px rgba(212, 167, 44, .25)); }
+.center .partai, .center .chip, .center .kelas, .center .status, .center .timer { text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
+.sb-foot .motto { font-size: .8rem; color: var(--muted); } .sb-foot .motto [lang="ar"] { color: var(--gold-2); font-size: 1rem; }
+
+/* =====================================================================
+   REMOT JURI — selalu PAS satu layar (HP & tablet, portrait maupun landscape)
+   ===================================================================== */
+body.judge-page { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; background-attachment: scroll; }
+body.judge-page .topbar { position: relative; flex: none; padding: 5px 10px; gap: 8px; }
+body.judge-page .topbar .logo-slot { width: 34px; height: 34px; font-size: .8rem; }
+body.judge-page .tb-title span, body.judge-page .tb-user { display: none; }
+body.judge-page .tb-title strong { font-size: .8rem; } body.judge-page .tb-role { font-size: .9rem; }
+body.judge-page .topbar .btn { padding: 4px 10px; font-size: .75rem; }
+.judge-page .j-wrap { flex: 1; min-height: 0; max-width: none; width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 6px 8px; }
+.judge-page .notice { margin: 0; padding: 4px 10px; font-size: .8rem; flex: none; }
+/* kepala: partai | juri+timer | babak */
+.judge-page .j-head, .judge-page .sj-head { flex: none; gap: 6px; margin: 0; grid-template-columns: 1fr 1.4fr 1fr; }
+.judge-page .j-box, .judge-page .j-mid { padding: 3px 8px; border-radius: 10px; }
+.judge-page .j-box small { font-size: .65rem; } .judge-page .j-box b { font-size: 1.25rem; line-height: 1.1; } .judge-page .j-box span { font-size: .7rem; }
+.judge-page .j-mid b { font-size: .85rem; } .judge-page .j-mid .timer { font-size: clamp(1.5rem, 5.5vh, 2.2rem); line-height: 1; } .judge-page .j-mid .status { font-size: .65rem; padding: 1px 6px; }
+.judge-page .j-head .j-mid, .judge-page .sj-head .j-mid { grid-column: auto; grid-row: auto; }
+/* dua sisi memenuhi sisa tinggi layar */
+.judge-page .j-sides { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); gap: 8px; }
+.judge-page #redSide, .judge-page #blueSide { min-height: 0; display: flex; }
+.judge-page .jside { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 6px 8px; overflow: hidden; border-radius: 14px; }
+.judge-page .jside h2 { margin: 0 0 4px; font-size: .85rem; }
+.judge-page .tech-grid { flex: 1; min-height: 0; grid-template-rows: 1fr 1fr; gap: 6px; }
+.judge-page .tech { min-height: 0; } .judge-page .tech-btn { height: 100%; min-height: 0; border-radius: 12px; }
+.judge-page .tech-btn .tl { font-size: clamp(.7rem, 2.2vh, .95rem); } .judge-page .tech-btn .tv { font-size: clamp(1.4rem, 6.5vh, 2.6rem); } .judge-page .tech-btn .tc { font-size: clamp(.7rem, 2.2vh, 1rem); }
+.judge-page .tech-undo { top: 3px; right: 3px; padding: 0 6px; font-size: .7rem; }
+.judge-page .pen-row { flex: none; margin-top: 6px; padding-top: 6px; gap: 6px; }
+.judge-page .pen-btn { min-height: 0; height: clamp(34px, 9vh, 54px); font-size: clamp(1rem, 3.4vh, 1.4rem); border-radius: 10px; }
+.judge-page .side-sum { flex: none; font-size: .7rem; margin-top: 3px; } .judge-page .side-sum b { font-size: .9rem; }
+.judge-page .j-send { flex: none; position: static; margin: 0; padding: 4px 10px; gap: 6px 12px; font-size: .75rem; border-radius: 10px; }
+.judge-page .j-send small { display: none; }
+@media (max-width: 640px) and (orientation: portrait) {   /* HP berdiri: dua sisi ditumpuk, tetap pas layar */
+  .judge-page .j-sides { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .judge-page .tech-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr; }
+}
+@media (max-height: 460px) {   /* HP landscape yang pendek */
+  body.judge-page .tb-title { display: none; }
+  .judge-page .j-box span, .judge-page .j-mid .status { display: none; }
+  .judge-page .j-wrap { gap: 4px; padding: 4px 6px; } .judge-page .jside h2 { display: none; }
+  .judge-page .pen-btn { height: clamp(30px, 11vh, 44px); }
+}
+
+/* remot juri seni: 3 kolom selalu berdampingan, keypad mengisi tinggi layar */
+.judge-page .sj-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: minmax(0, 1fr); gap: 8px; }
+.judge-page .sj-col { min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; gap: 5px; padding: 6px; border-radius: 14px; overflow: hidden; }
+.judge-page .sj-col h2 { font-size: clamp(.75rem, 3vw, 1rem); margin: 0; }
+.judge-page .sj-disp { font-size: clamp(1.4rem, 6vh, 2.2rem); min-height: 0; padding: 2px 0; }
+.judge-page .keypad { min-height: 0; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.judge-page .keypad button { min-height: 0; height: 100%; font-size: clamp(1rem, 4.2vh, 1.5rem); border-radius: 10px; padding: 0; }
+.judge-page .sj-col .btn.big { padding: 6px; font-size: clamp(.8rem, 3.2vh, 1rem); }
+.judge-page .sj-info { font-size: .65rem; min-height: 0; }
+@media (max-width: 480px) { .judge-page .sj-cols { gap: 5px; } .judge-page .sj-col { padding: 4px; } .judge-page .keypad { gap: 3px; } }
+
+/* =====================================================================
+   REVISI FINAL: sudut KUNING vs BIRU, hukuman & DIS, hiasan langit
+   ===================================================================== */
+:root { --yellow: #ffd60a; --yellow-l: #ffe97a; --yellow-d: #9a7400; }
+
+/* ---- sudut kiri = KUNING (nama kelas tetap .red di kode) ---- */
+.side.red { border-color: var(--yellow); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 0 30px rgba(255, 214, 10, .28); }
+.side.red h2 { background: linear-gradient(135deg, var(--yellow-l), var(--yellow)); color: #241a00; }
+.side.red .big { filter: drop-shadow(0 0 22px rgba(255, 214, 10, .5)); }
+.side.red .pill.on { background: var(--yellow); border-color: var(--yellow-l); color: #241a00; }
+.winner.red { background: linear-gradient(90deg, var(--yellow-d), var(--yellow)); border-color: var(--yellow-l); color: #1d1500; }
+.red-f input { border-left-color: var(--yellow); }
+.mon-side.red { border-color: var(--yellow); background: rgba(255, 214, 10, .09); }
+th.r, .big-n.r, .r { color: var(--yellow-l); }
+.jside.red { border-color: var(--yellow); }
+.jside.red .tech-btn { border-color: var(--yellow); }
+.jside.red .tech-btn:hover:not(:disabled) { box-shadow: 0 0 22px rgba(255, 214, 10, .45); }
+.jside.red .tech-btn:active:not(:disabled) { background: var(--yellow); color: #241a00; }
+.jside.red .pill.on, .jside.red .pen-btn.on { background: var(--yellow); border-color: var(--yellow-l); color: #241a00; }
+.jside.red .pen-btn.on small { color: #4a3800; }
+
+/* ---- tombol hukuman: T1 T2 P1 P2 DIS (nilai pengurang tampil di tombol) ---- */
+.pen-row { grid-template-columns: repeat(5, 1fr); }
+.pen-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; padding: 0; }
+.pen-btn small { font-size: .55em; font-weight: 700; opacity: .85; }
+.jside .pen-btn[data-f="dis"] { border-color: rgba(214, 40, 57, .7); color: #ff9aa4; }
+.jside .pen-btn[data-f="dis"].on { background: var(--red); border-color: #ff8a95; color: #fff; }
+.jside .pen-btn[data-f="dis"]:disabled { opacity: .3; }
+.side .pill.dis.on { background: var(--red); border-color: #ff8a95; color: #fff; }
+.side { position: relative; }
+.side.dq .big { filter: grayscale(1) opacity(.3); }
+.side.dq::after { content: "DISKUALIFIKASI"; position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-8deg); white-space: nowrap; pointer-events: none;
+  padding: .15em .55em; background: rgba(214, 40, 57, .92); color: #fff; border: .1em solid #ff8a95; border-radius: 12px; box-shadow: 0 0 40px rgba(214, 40, 57, .6);
+  font: 900 clamp(1.2rem, 3.6vw, 3.2rem) var(--font-num); letter-spacing: .05em; animation: pop .4s var(--ease); }
+.alert { background: rgba(214, 40, 57, .18); border: 2px solid var(--red); border-radius: 10px; padding: 9px 14px; margin: 8px 0; font-weight: 700; color: #ffc1c8; animation: pop .3s var(--ease); }
+
+/* ---- loting: pilihan usia + gender ---- */
+.kat-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
+.lot-boxes { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 800px) { .lot-boxes { grid-template-columns: 1fr; } }
+
+/* ---- hiasan langit: bintang berkelip & hujan emas tipis ---- */
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.sky .st { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; background: #fff6d6; box-shadow: 0 0 6px 1px rgba(255, 236, 170, .65); opacity: .2; animation: twinkle var(--d) ease-in-out infinite; animation-delay: var(--l); }
+@keyframes twinkle { 0%, 100% { opacity: .12; transform: scale(.8); } 50% { opacity: .9; transform: scale(1.25); } }
+.sky .rain { position: absolute; top: -140px; width: 2px; border-radius: 2px; opacity: 0; background: linear-gradient(180deg, transparent, rgba(243, 210, 122, .75)); animation: fall var(--d) linear infinite; animation-delay: var(--l); }
+@keyframes fall { 0% { transform: translate3d(0, 0, 0) rotate(14deg); opacity: 0; } 10% { opacity: .75; } 100% { transform: translate3d(-24vh, 118vh, 0) rotate(14deg); opacity: 0; } }
