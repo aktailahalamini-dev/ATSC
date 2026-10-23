@@ -22,11 +22,10 @@ const ATSC_RESULTS = (() => {
     function computeSide(a, key) {
         const js = Object.values(a.scores || {}).filter(j => j !== null && j !== undefined);
         const q = R().quorum;
-
         const tech = R().techButtons.reduce((t, b, i) => t + lvl(js.map(j => {
-            // Ambil data berdasarkan key ('yellow'), jika kosong fallback ke 'red'
-            const sideData = (j && (j[key] || j['red'])) || {};
-            return (sideData.tech && sideData.tech[i]) ? sideData.tech[i] : 0;
+            // Pengaman agar tidak error jika data sisi atau tech belum ada
+            const side = j && (j[key] || j.red);
+            return (side && side.tech && side.tech[i]) ? side.tech[i] : 0;
         }), q) * b.pts, 0);
 
         // ... sisa kode di bawahnya biarkan seperti semula ...
