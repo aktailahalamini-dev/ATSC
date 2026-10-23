@@ -223,6 +223,7 @@ const ATSC = (() => {
     }
 
     // Otomatis tarik data dari Firebase jika ada perubahan dari HP Juri
+    // TIDAK lagi reload otomatis - update hanya via event 'storage'
     if (typeof window !== 'undefined') {
         setTimeout(() => {
             if (window.firebaseDb && window.firebaseRef && window.firebaseOnValue) {
@@ -234,8 +235,8 @@ const ATSC = (() => {
                             localStorage.setItem(KEY, raw);
                             cacheRaw = raw;
                             cacheObj = data;
+                            // Dispatch event untuk notify halaman lain (tanpa reload)
                             window.dispatchEvent(new Event('storage'));
-                            location.reload();
                         }
                     }
                 });
