@@ -45,14 +45,14 @@
                 m = a.match;
             const row = (l, f) => `<tr><th>${l}</th><td class="val-kuning">${f(j.red)}</td><td class="val-biru">${f(j.blue)}</td></tr>`;
             return `<article class="card jcard" id="jcard-${no}" data-rev="${j.revision || 0}">
-            <h3>JURI ${no} <small>${esc(m ? m.juri[no - 1] : '')}</small></h3>
-            <span class="badge" id="badge-${no}" data-ok="${j.revision ? 1 : 0}">${j.revision ? 'Sudah Menilai' : 'Belum Menilai'}</span>
-            <table><thead><tr><th></th><th class="r">Kuning</th><th class="b">Biru</th></tr></thead><tbody>
-            ${row('nilai', s => ATSC_RESULTS.techOf(s))}
-            ${ATSC.RULES.penaltyBtns.map(b => row(b.label, s => (s[b.key][b.idx] ? 1 : 0))).join('')}
-            </tbody></table>
-            <small>Input terakhir: <span id="jtime-${no}">${UI.fmtTime(j.submittedAt)}</span></small>
-        </article>`;
+        <h3>JURI ${no} <small>${esc(m ? m.juri[no - 1] : '')}</small></h3>
+        <span class="badge" id="badge-${no}" data-ok="${j.revision ? 1 : 0}">${j.revision ? 'Sudah Menilai' : 'Belum Menilai'}</span>
+        <table><thead><tr><th></th><th class="r">Kuning</th><th class="b">Biru</th></tr></thead><tbody>
+        ${row('nilai', s => ATSC_RESULTS.techOf(s))}
+        ${ATSC.RULES.penaltyBtns.map(b => row(b.label, s => (s[b.key][b.idx] ? 1 : 0))).join('')}
+        </tbody></table>
+        <small>Input terakhir: ${UI.fmtTime(j.submittedAt)}</small>
+    </article>`;
         }
 
         function renderMonitor(a, s) {
