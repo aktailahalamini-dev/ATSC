@@ -20,10 +20,16 @@ const ATSC_RESULTS = (() => {
      (nilai babak lama tersimpan di a.rounds). Hukuman T/P/DIS yang sudah sah di babak sebelumnya DIBAWA ke babak
      berikutnya (tetap menyala) dan tidak dikurangkan dua kali. DIS bersifat permanen sampai akhir pertandingan. */
     function computeSide(a, key) {
-        const js = Object.values(a.scores),
-            q = R().quorum;
-        const carry = (a.carry && a.carry[key]) || { t: [false, false], p: [false, false], dis: [false] };
-        const tech = R().techButtons.reduce((t, b, i) => t + lvl(js.map(j => j[key].tech[i]), q) * b.pts, 0);
+        const js = Object.values(a.scores || {}).filter(j => j !== null && j !== undefined);
+        const q = R().quorum;
+
+        const tech = R().techButtons.reduce((t, b, i) => t + lvl(js.map(j => {
+            // Ambil data berdasarkan key ('yellow'), jika kosong fallback ke 'red'
+            const sideData = (j && (j[key] || j['red'])) || {};
+            return (sideData.tech && sideData.tech[i]) ? sideData.tech[i] : 0;
+        }), q) * b.pts, 0);
+
+        // ... sisa kode di bawahnya biarkan seperti semula ...
         const flag = f => [0, 1].map(k => !!(carry[f] && carry[f][k]) || lvl(js.map(j => ((j[key][f] || [])[k] ? 1 : 0)), q) === 1);
         const t = flag('t'),
             p = flag('p'),
