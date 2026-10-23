@@ -235,7 +235,7 @@ const ATSC = (() => {
                             cacheRaw = raw;
                             cacheObj = data;
                             window.dispatchEvent(new Event('storage'));
-                            location.reload(); // ← INI YANG HARUS DIHAPUS!
+                            // ← INI YANG HARUS DIHAPUS!
                         }
                     }
                 });
