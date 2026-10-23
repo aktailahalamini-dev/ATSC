@@ -235,8 +235,8 @@ const ATSC = (() => {
                             localStorage.setItem(KEY, raw);
                             cacheRaw = raw;
                             cacheObj = data;
-                            // Dispatch event untuk notify halaman lain (tanpa reload)
                             window.dispatchEvent(new Event('storage'));
+                            // location.reload();  <-- Pastikan baris ini ADA lagi (hilangkan tanda // di depannya jika ada)
                         }
                     }
                 });

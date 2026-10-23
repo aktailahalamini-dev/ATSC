@@ -167,56 +167,56 @@
             const lead = sc.red.total === sc.blue.total ? 'Total sementara seimbang' : `Total sementara lebih tinggi: Sudut ${sc.red.total > sc.blue.total ? 'Kuning' : 'Biru'}`;
             const rl = ATSC_RESULTS.roundsList(a);
             const rtab = rl.length > 1 ? `<table class="list" style="margin:8px 0"><thead><tr><th>Babak</th><th class="r">Kuning</th><th class="b">Biru</th></tr></thead><tbody>${rl.map(x => `<tr><td>${esc(x.label)}${x.done ? ' (tersimpan)' : ' (berjalan)'}</td><td>${f(x.red)}</td><td>${f(x.blue)}</td></tr>`).join('')}</tbody></table>` : '';
-            const r = a.result,
-                official = r ? `<p class="official">HASIL RESMI: <b>${r.winnerSide ? esc(m[r.winnerSide].nama) + ' — Sudut ' + (r.winnerSide === 'red' ? 'Kuning' : 'Biru') : 'Seri / belum ada pemenang'}</b> · ${esc(r.basis)} · oleh ${esc(r.by)} · ${UI.fmtDateTime(r.at)}${r.correctionReason ? ' · koreksi: ' + esc(r.correctionReason) : ''}</p>` : '';
-            UI.setHTML(info, `<table class="sum"><tr><th>Partai</th><td>${esc(m.nomor)} · Arena ${n}</td><th>Status</th><td>${ATSC.STATUS[st]}</td></tr>
+        const r = a.result,
+            official = r ? `<p class="official">HASIL RESMI: <b>${r.winnerSide ? esc(m[r.winnerSide].nama) + ' — Sudut ' + (r.winnerSide === 'red' ? 'Kuning' : 'Biru') : 'Seri / belum ada pemenang'}</b> · ${esc(r.basis)} · oleh ${esc(r.by)} · ${UI.fmtDateTime(r.at)}${r.correctionReason ? ' · koreksi: ' + esc(r.correctionReason) : ''}</p>` : '';
+        UI.setHTML(info, `<table class="sum"><tr><th>Partai</th><td>${esc(m.nomor)} · Arena ${n}</td><th>Status</th><td>${ATSC.STATUS[st]}</td></tr>
       <tr><th class="r">Kuning</th><td>${esc(m.red.nama)} (${esc(m.red.kontingen)})</td><td colspan="2" class="big-n r">${f(sc.red.total)}</td></tr>
       <tr><th class="b">Biru</th><td>${esc(m.blue.nama)} (${esc(m.blue.kontingen)})</td><td colspan="2" class="big-n b">${f(sc.blue.total)}</td></tr></table>${rtab}
       <p class="muted">${lead} (hanya informasi, bukan keputusan). Juri sudah menilai: ${sc.submitted}/${ATSC.RULES.judgeCount}.</p>${official}`);
-            const can = st === 'selesai' || (st === 'final' && correcting);
-            setWForm(can);
-            note.hidden = can || st === 'final';
-            const dqSide = sc.red.dis ? 'red' : sc.blue.dis ? 'blue' : null; // saran otomatis (tetap harus dikonfirmasi Dewan)
-            if (can && !correcting && dqSide && autoDq !== m.uid && !document.querySelector('input[name="hasil"]:checked')) {
-                document.querySelector(`input[name="hasil"][value="${dqSide === 'red' ? 'blue' : 'red'}"]`).checked = true;
-                $('wBasis').value = 'Diskualifikasi lawan';
-                autoDq = m.uid;
-            }
-            if (!note.hidden) note.textContent = 'Akhiri pertandingan terlebih dahulu untuk menetapkan pemenang.';
-            $('wCorrect').hidden = !(st === 'final' && !correcting);
-            $('wConfirm').hidden = !can;
-            UI.setText($('wConfirm'), correcting ? 'SIMPAN KOREKSI' : 'TETAPKAN PEMENANG');
-            $('wBy').value = by;
+        const can = st === 'selesai' || (st === 'final' && correcting);
+        setWForm(can);
+        note.hidden = can || st === 'final';
+        const dqSide = sc.red.dis ? 'red' : sc.blue.dis ? 'blue' : null; // saran otomatis (tetap harus dikonfirmasi Dewan)
+        if (can && !correcting && dqSide && autoDq !== m.uid && !document.querySelector('input[name="hasil"]:checked')) {
+            document.querySelector(`input[name="hasil"][value="${dqSide === 'red' ? 'blue' : 'red'}"]`).checked = true;
+            $('wBasis').value = 'Diskualifikasi lawan';
+            autoDq = m.uid;
         }
-        $('wCorrect').onclick = () => {
-            correcting = true;
-            render();
-        };
-        $('wConfirm').onclick = async() => {
-            if (!guard()) return;
-            const pick = document.querySelector('input[name="hasil"]:checked');
-            if (!pick) { UI.toast('Pilih hasil pertandingan.', 'err'); return; }
-            const data = { winnerSide: pick.value === 'seri' ? null : pick.value, basis: $('wBasis').value, notes: $('wNotes').value.trim() };
-            const a = ATSC.getArena(n),
-                m = a.match,
-                sc = ATSC_RESULTS.compute(a),
-                f = ATSC_RESULTS.fmtScore;
-            const lbl = data.winnerSide ? `${esc(m[data.winnerSide].nama)} — Sudut ${data.winnerSide === 'red' ? 'Kuning' : 'Biru'}` : 'Seri / belum ada pemenang';
-            const c = await UI.confirmDialog({
-                title: 'Konfirmasi hasil resmi',
-                okText: 'Konfirmasi Hasil',
-                reason: correcting ? { label: 'Alasan koreksi', required: true } : null,
-                html: `<p>Apakah Anda yakin ingin mengonfirmasi hasil resmi pertandingan ini?</p><p class="official"><b>${lbl}</b><br>Dasar: ${esc(data.basis || '—')}</p><p>Total akhir — Kuning <b>${f(sc.red.total)}</b> : <b>${f(sc.blue.total)}</b> Biru</p>`
-            });
-            if (!c.ok) return;
-            data.reason = c.reason;
-            const r = ATSC_RESULTS.confirm(n, data, by);
-            if (r.ok) correcting = false;
-            report(r);
-        };
+        if (!note.hidden) note.textContent = 'Akhiri pertandingan terlebih dahulu untuk menetapkan pemenang.';
+        $('wCorrect').hidden = !(st === 'final' && !correcting);
+        $('wConfirm').hidden = !can;
+        UI.setText($('wConfirm'), correcting ? 'SIMPAN KOREKSI' : 'TETAPKAN PEMENANG');
+        $('wBy').value = by;
+    }
+    $('wCorrect').onclick = () => {
+        correcting = true;
+        render();
+    };
+    $('wConfirm').onclick = async() => {
+        if (!guard()) return;
+        const pick = document.querySelector('input[name="hasil"]:checked');
+        if (!pick) { UI.toast('Pilih hasil pertandingan.', 'err'); return; }
+        const data = { winnerSide: pick.value === 'seri' ? null : pick.value, basis: $('wBasis').value, notes: $('wNotes').value.trim() };
+        const a = ATSC.getArena(n),
+            m = a.match,
+            sc = ATSC_RESULTS.compute(a),
+            f = ATSC_RESULTS.fmtScore;
+        const lbl = data.winnerSide ? `${esc(m[data.winnerSide].nama)} — Sudut ${data.winnerSide === 'red' ? 'Kuning' : 'Biru'}` : 'Seri / belum ada pemenang';
+        const c = await UI.confirmDialog({
+            title: 'Konfirmasi hasil resmi',
+            okText: 'Konfirmasi Hasil',
+            reason: correcting ? { label: 'Alasan koreksi', required: true } : null,
+            html: `<p>Apakah Anda yakin ingin mengonfirmasi hasil resmi pertandingan ini?</p><p class="official"><b>${lbl}</b><br>Dasar: ${esc(data.basis || '—')}</p><p>Total akhir — Kuning <b>${f(sc.red.total)}</b> : <b>${f(sc.blue.total)}</b> Biru</p>`
+        });
+        if (!c.ok) return;
+        data.reason = c.reason;
+        const r = ATSC_RESULTS.confirm(n, data, by);
+        if (r.ok) correcting = false;
+        report(r);
+    };
 
-        /* ---------------- DATA FIGHTER (form) ---------------- */
-        const fieldsHTML = p => `<div class="grid">
+    /* ---------------- DATA FIGHTER (form) ---------------- */
+    const fieldsHTML = p => `<div class="grid">
       <label class="field"><span>Partai *</span><input id="${p}-partai"></label>
       <label class="field"><span>Babak</span><select id="${p}-babak"><option>1</option><option>2</option><option>3</option></select></label>
       <label class="field"><span>Kategori *</span><input id="${p}-kat" list="dl-kat"></label>
@@ -228,117 +228,117 @@
       <label class="field"><span>Timer per babak (menit) *</span><input id="${p}-timer" type="number" min="0.1" step="0.1" value="2"></label>
       <label class="field"><span>Babak tambahan (menit; 0 = tidak ada)</span><input id="${p}-tam" type="number" min="0" step="0.1" value="1"></label>
       <label class="field"><span>Arena</span><select id="${p}-arena"><option value="">Bebas (Arena 1 &amp; 2)</option><option value="1">Arena 1</option><option value="2">Arena 2</option></select></label></div>`;
-        $('addFields').innerHTML = fieldsHTML('a');
-        $('editFields').innerHTML = fieldsHTML('e');
-        const g = id => $(id);
-        const readF = p => {
-            const t = id => g(p + '-' + id).value.trim();
-            const k = FD.normKat(t('kat')) || t('kat');
-            return {
-                partai: t('partai'),
-                babak: +g(p + '-babak').value,
-                kategori: k,
-                kelas: t('kelas'),
-                red: { nama: t('redN'), kontingen: t('redK') },
-                blue: { nama: t('blueN'), kontingen: t('blueK') },
-                durasiMenit: parseFloat(g(p + '-timer').value),
-                durasiTambahanMenit: g(p + '-tam').value === '' ? 0 : parseFloat(g(p + '-tam').value),
-                arena: g(p + '-arena').value ? +g(p + '-arena').value : null
-            };
+    $('addFields').innerHTML = fieldsHTML('a');
+    $('editFields').innerHTML = fieldsHTML('e');
+    const g = id => $(id);
+    const readF = p => {
+        const t = id => g(p + '-' + id).value.trim();
+        const k = FD.normKat(t('kat')) || t('kat');
+        return {
+            partai: t('partai'),
+            babak: +g(p + '-babak').value,
+            kategori: k,
+            kelas: t('kelas'),
+            red: { nama: t('redN'), kontingen: t('redK') },
+            blue: { nama: t('blueN'), kontingen: t('blueK') },
+            durasiMenit: parseFloat(g(p + '-timer').value),
+            durasiTambahanMenit: g(p + '-tam').value === '' ? 0 : parseFloat(g(p + '-tam').value),
+            arena: g(p + '-arena').value ? +g(p + '-arena').value : null
         };
-        const fillF = (p, e) => {
-            g(p + '-partai').value = e.partai;
-            g(p + '-babak').value = e.babak;
-            g(p + '-kat').value = e.kategori;
-            g(p + '-kelas').value = e.kelas;
-            g(p + '-redN').value = e.red.nama;
-            g(p + '-redK').value = e.red.kontingen;
-            g(p + '-blueN').value = e.blue.nama;
-            g(p + '-blueK').value = e.blue.kontingen;
-            g(p + '-timer').value = e.durasiMenit;
-            g(p + '-tam').value = e.tambahan ? e.durasiTambahanMenit : 0;
-            g(p + '-arena').value = e.arena || '';
-        };
-        const resetAdd = s => {
-            ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('a-' + k).value = '');
-            g('a-partai').value = FD.nextPartai(s);
-        };
-        g('a-partai').value = FD.nextPartai(ATSC.load());
-        $('addForm').addEventListener('submit', e => {
-            e.preventDefault();
-            if (!guard()) return;
-            const r = FD.addEntry(n, readF('a'), by);
-            showErr('addErr', r.ok ? [] : r.errors);
-            if (r.ok) {
-                UI.toast(r.msg, 'ok');
-                resetAdd(ATSC.load());
-                render();
-            } else UI.toast('Periksa isian.', 'err');
-        });
-        $('e-pick').onchange = () => {
+    };
+    const fillF = (p, e) => {
+        g(p + '-partai').value = e.partai;
+        g(p + '-babak').value = e.babak;
+        g(p + '-kat').value = e.kategori;
+        g(p + '-kelas').value = e.kelas;
+        g(p + '-redN').value = e.red.nama;
+        g(p + '-redK').value = e.red.kontingen;
+        g(p + '-blueN').value = e.blue.nama;
+        g(p + '-blueK').value = e.blue.kontingen;
+        g(p + '-timer').value = e.durasiMenit;
+        g(p + '-tam').value = e.tambahan ? e.durasiTambahanMenit : 0;
+        g(p + '-arena').value = e.arena || '';
+    };
+    const resetAdd = s => {
+        ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('a-' + k).value = '');
+        g('a-partai').value = FD.nextPartai(s);
+    };
+    g('a-partai').value = FD.nextPartai(ATSC.load());
+    $('addForm').addEventListener('submit', e => {
+        e.preventDefault();
+        if (!guard()) return;
+        const r = FD.addEntry(n, readF('a'), by);
+        showErr('addErr', r.ok ? [] : r.errors);
+        if (r.ok) {
+            UI.toast(r.msg, 'ok');
+            resetAdd(ATSC.load());
+            render();
+        } else UI.toast('Periksa isian.', 'err');
+    });
+    $('e-pick').onchange = () => {
+        editSig = '';
+        render();
+    };
+    $('editForm').addEventListener('submit', e => {
+        e.preventDefault();
+        if (!guard() || !$('e-pick').value) return;
+        const r = FD.updateEntry(n, $('e-pick').value, readF('e'), by);
+        showErr('editErr', r.ok ? [] : r.errors);
+        if (r.ok) {
             editSig = '';
+            UI.toast(r.msg, 'ok');
             render();
-        };
-        $('editForm').addEventListener('submit', e => {
-            e.preventDefault();
-            if (!guard() || !$('e-pick').value) return;
-            const r = FD.updateEntry(n, $('e-pick').value, readF('e'), by);
-            showErr('editErr', r.ok ? [] : r.errors);
-            if (r.ok) {
-                editSig = '';
-                UI.toast(r.msg, 'ok');
-                render();
-            } else UI.toast(r.msg, 'err');
-        });
-        $('e-del').onclick = async() => {
-            if (!guard() || !$('e-pick').value) return;
-            const c = await UI.confirmDialog({ title: 'Hapus partai?', okText: 'Hapus', html: '<p>Partai akan dihapus dari daftar.</p>' });
-            if (c.ok) {
-                editSig = '';
-                report(FD.removeEntry(n, $('e-pick').value, by));
-            }
-        };
-
-        function renderData(s) {
-            const opts = s.fightList.filter(e => e.status === 'akan'),
-                key = opts.map(e => e.id + e.partai).join(',');
-            if (editKey !== key) {
-                const cur = $('e-pick').value;
-                editKey = key;
-                $('e-pick').innerHTML = opts.map(e => `<option value="${esc(e.id)}">${esc(label(e))}</option>`).join('') || '<option value="">(tidak ada partai "akan bertanding")</option>';
-                if (opts.some(e => e.id === cur)) $('e-pick').value = cur;
-                editSig = '';
-            }
-            const e = opts.find(x => x.id === $('e-pick').value);
-            if (e) {
-                const sig = JSON.stringify(e);
-                if (editSig !== sig) {
-                    fillF('e', e);
-                    editSig = sig;
-                }
-            }
-            $('editNote').hidden = !(e && e.ref);
-            ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('e-' + k).disabled = !e || !!e.ref);
-            ['partai', 'babak', 'timer', 'tam', 'arena'].forEach(k => g('e-' + k).disabled = !e);
-            $('e-del').disabled = !e || !!e.ref;
-            const kl = [...new Set([...s.fightList.map(x => x.kelas), ...s.loting.peserta.map(p => p.kelas)])];
-            UI.setHTML($('dl-kelas'), kl.map(k => `<option value="${esc(k)}">`).join(''));
+        } else UI.toast(r.msg, 'err');
+    });
+    $('e-del').onclick = async() => {
+        if (!guard() || !$('e-pick').value) return;
+        const c = await UI.confirmDialog({ title: 'Hapus partai?', okText: 'Hapus', html: '<p>Partai akan dihapus dari daftar.</p>' });
+        if (c.ok) {
+            editSig = '';
+            report(FD.removeEntry(n, $('e-pick').value, by));
         }
+    };
 
-        /* ---------------- DATA RIWAYAT ---------------- */
-        document.querySelectorAll('#filters [data-f]').forEach(b => b.onclick = () => {
-            filter = b.dataset.f;
-            document.querySelectorAll('#filters [data-f]').forEach(x => x.classList.toggle('active', x === b));
-            render();
-        });
+    function renderData(s) {
+        const opts = s.fightList.filter(e => e.status === 'akan'),
+            key = opts.map(e => e.id + e.partai).join(',');
+        if (editKey !== key) {
+            const cur = $('e-pick').value;
+            editKey = key;
+            $('e-pick').innerHTML = opts.map(e => `<option value="${esc(e.id)}">${esc(label(e))}</option>`).join('') || '<option value="">(tidak ada partai "akan bertanding")</option>';
+            if (opts.some(e => e.id === cur)) $('e-pick').value = cur;
+            editSig = '';
+        }
+        const e = opts.find(x => x.id === $('e-pick').value);
+        if (e) {
+            const sig = JSON.stringify(e);
+            if (editSig !== sig) {
+                fillF('e', e);
+                editSig = sig;
+            }
+        }
+        $('editNote').hidden = !(e && e.ref);
+        ['kat', 'kelas', 'redN', 'redK', 'blueN', 'blueK'].forEach(k => g('e-' + k).disabled = !e || !!e.ref);
+        ['partai', 'babak', 'timer', 'tam', 'arena'].forEach(k => g('e-' + k).disabled = !e);
+        $('e-del').disabled = !e || !!e.ref;
+        const kl = [...new Set([...s.fightList.map(x => x.kelas), ...s.loting.peserta.map(p => p.kelas)])];
+        UI.setHTML($('dl-kelas'), kl.map(k => `<option value="${esc(k)}">`).join(''));
+    }
 
-        function renderRiwayat(a, s) {
-            const st = FD.stats(s);
-            UI.setText($('stAll'), st.total);
-            UI.setText($('stAkan'), st.akan);
-            UI.setText($('stSudah'), st.sudah);
-            const rows = s.fightList.filter(e => filter === 'semua' || (filter === 'sudah' ? e.status === 'sudah' : e.status !== 'sudah'));
-            UI.setHTML($('histTable'), rows.length ? `<table class="list"><thead><tr><th>partai</th><th>nama</th><th>kontingen</th><th>kategori</th><th>kelas</th><th>tanggal</th><th>nilai</th><th>status</th><th>cetak</th></tr></thead><tbody>${rows.map(e => `<tr>
+    /* ---------------- DATA RIWAYAT ---------------- */
+    document.querySelectorAll('#filters [data-f]').forEach(b => b.onclick = () => {
+        filter = b.dataset.f;
+        document.querySelectorAll('#filters [data-f]').forEach(x => x.classList.toggle('active', x === b));
+        render();
+    });
+
+    function renderRiwayat(a, s) {
+        const st = FD.stats(s);
+        UI.setText($('stAll'), st.total);
+        UI.setText($('stAkan'), st.akan);
+        UI.setText($('stSudah'), st.sudah);
+        const rows = s.fightList.filter(e => filter === 'semua' || (filter === 'sudah' ? e.status === 'sudah' : e.status !== 'sudah'));
+        UI.setHTML($('histTable'), rows.length ? `<table class="list"><thead><tr><th>partai</th><th>nama</th><th>kontingen</th><th>kategori</th><th>kelas</th><th>tanggal</th><th>nilai</th><th>status</th><th>cetak</th></tr></thead><tbody>${rows.map(e => `<tr>
       <td>${esc(e.partai)}</td><td><span class="r">${esc(e.red.nama)}</span> vs <span class="b">${esc(e.blue.nama)}</span></td><td>${esc(e.red.kontingen)} / ${esc(e.blue.kontingen)}</td><td>${esc(e.kategori)}</td><td>${esc(e.kelas)}</td>
       <td>${dateStr(e.tanggal)}</td><td>${e.hasil ? e.hasil.red + ' : ' + e.hasil.blue : '—'}</td>
       <td>${e.status === 'sudah' ? 'Sudah' : e.status === 'tampil' ? 'Sedang tampil (Arena ' + e.arena + ')' : 'Akan · ' + (e.arena ? 'Arena ' + e.arena : 'Bebas')}</td>
