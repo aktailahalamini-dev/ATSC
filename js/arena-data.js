@@ -57,6 +57,8 @@ const ATSC = (() => {
         for (let i = 1; i <= RULES.judgeCount; i++) s[i] = emptyJudge();
         return s;
     }
+    /* hukuman (T/P/DIS) yang sudah berlaku di babak-babak sebelumnya: dibawa ke babak berikutnya */
+    const emptyCarry = () => ({ red: { t: [false, false], p: [false, false], dis: [false] }, blue: { t: [false, false], p: [false, false], dis: [false] } });
     const newArena = n => ({
         id: n,
         match: null,
@@ -65,7 +67,10 @@ const ATSC = (() => {
         result: null,
         audit: [],
         history: [],
-        scoreLog: []
+        scoreLog: [],
+        rounds: [],
+        carry: emptyCarry(),
+        roundOpen: false // nilai babak yang sudah selesai disimpan di rounds
     });
 
     function buildRounds(m) {
@@ -93,6 +98,9 @@ const ATSC = (() => {
         a.scores = emptyScores();
         a.result = null;
         a.scoreLog = [];
+        a.rounds = [];
+        a.carry = emptyCarry();
+        a.roundOpen = false;
         a.timer = { running: false, remainingMs: buildRounds(a.match)[0].ms, endsAt: null };
         audit(a, by, 'Partai disimpan', 'Partai ' + d.nomor + ': ' + d.red.nama + ' vs ' + d.blue.nama);
     }
@@ -172,24 +180,17 @@ const ATSC = (() => {
         cacheObj = obj;
         return obj;
     }
-    let remoteReady = false; // true setelah snapshot pertama dari Firebase diterima
-    function save(state, fbPath) {
+
+    function save(state) {
         const raw = JSON.stringify(state);
         localStorage.setItem(KEY, raw);
         cacheRaw = raw;
         cacheObj = state;
 
-        // Sinkron ke Firebase. fbPath (mis. 'arenas/1/scores/2') = tulis bagian kecil saja
-        // supaya input juri yang bersamaan tidak saling menimpa. Tanpa fbPath = tulis semua.
+        // Otomatis tembak ke Firebase
         if (typeof window !== 'undefined' && window.firebaseDb && window.firebaseRef && window.firebaseSet) {
-            let path = 'atsc_state',
-                val = state;
-            if (fbPath && remoteReady) {
-                path += '/' + fbPath;
-                val = fbPath.split('/').reduce((o, k) => (o == null ? o : o[k]), state);
-            }
-            window.firebaseSet(window.firebaseRef(window.firebaseDb, path), val === undefined ? null : val)
-                .catch(err => console.error('Gagal sinkron: ', err));
+            window.firebaseSet(window.firebaseRef(window.firebaseDb, 'atsc_state'), state)
+                .catch(err => console.error("Gagal sinkron: ", err));
         }
     }
     const getArena = n => load().arenas[n];
@@ -202,10 +203,10 @@ const ATSC = (() => {
     }
 
     /* Baca-ubah-simpan satu arena. Arena lain TIDAK disentuh. */
-    function update(n, fn, sub) {
+    function update(n, fn) {
         const s = clone(load());
         const out = fn(s.arenas[n], s);
-        save(s, sub ? 'arenas/' + n + '/' + sub : null);
+        save(s);
         return out;
     }
 
@@ -221,50 +222,32 @@ const ATSC = (() => {
         return st;
     }
 
-    /* Firebase menghapus array kosong / nilai null, jadi data dari sana perlu dilengkapi lagi. */
-    function normalize(d) {
-        if (!d || typeof d !== 'object') return null;
-        d.fightList = d.fightList || [];
-        d.loting = d.loting || {};
-        d.loting.peserta = d.loting.peserta || [];
-        d.loting.draws = d.loting.draws || {};
-        for (const n of[1, 2]) {
-            const a = d.arenas && d.arenas[n];
-            if (!a) return null;
-            a.audit = a.audit || [];
-            a.history = a.history || [];
-            a.scoreLog = a.scoreLog || [];
-            if (a.match === undefined) a.match = null;
-            if (a.result === undefined) a.result = null;
-            if (!a.scores) return null;
-        }
-        return d;
-    }
-
-    // Tarik data dari Firebase. Layar TIDAK di-reload: semua halaman sudah me-render ulang
-    // sendiri dari localStorage (UI.every), jadi cukup perbarui datanya.
+    // Otomatis tarik data dari Firebase jika ada perubahan dari HP Juri
     if (typeof window !== 'undefined') {
-        const wait = setInterval(() => {
-            if (!(window.firebaseDb && window.firebaseRef && window.firebaseOnValue)) return;
-            clearInterval(wait);
-            window.firebaseOnValue(window.firebaseRef(window.firebaseDb, 'atsc_state'), snapshot => {
-                remoteReady = true;
-                const data = normalize(snapshot.val());
-                if (!data) return;
-                const raw = JSON.stringify(data);
-                if (raw !== localStorage.getItem(KEY)) {
-                    localStorage.setItem(KEY, raw);
-                    cacheRaw = raw;
-                    cacheObj = data;
-                }
-            });
-        }, 100);
+        setTimeout(() => {
+            if (window.firebaseDb && window.firebaseRef && window.firebaseOnValue) {
+                window.firebaseOnValue(window.firebaseRef(window.firebaseDb, 'atsc_state'), (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        const raw = JSON.stringify(data);
+                        if (raw !== localStorage.getItem(KEY)) {
+                            localStorage.setItem(KEY, raw);
+                            cacheRaw = raw;
+                            cacheObj = data;
+                            window.dispatchEvent(new Event('storage'));
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        }, 1500);
     }
     return {
         KEY,
         RULES,
         STATUS,
         clone,
+        emptyCarry,
         emptySide,
         emptyScores,
         newArena,

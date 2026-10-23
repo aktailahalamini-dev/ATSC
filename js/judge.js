@@ -40,11 +40,13 @@
     ['red', 'blue'].forEach(k => {
       const root = document.querySelector(`.jside.${k}`), d = rec[k];
       root.querySelectorAll('[data-c]').forEach(e => UI.setText(e, '×' + d.tech[+e.dataset.c]));
-      root.querySelectorAll('.pen-btn').forEach(e => e.classList.toggle('on', !!(d[e.dataset.f] || [])[+e.dataset.i]));
+            const cr = (a.carry && a.carry[k]) || {};
+      root.querySelectorAll('.pen-btn').forEach(e => { const car = !!(cr[e.dataset.f] || [])[+e.dataset.i]; e.classList.toggle('carried', car); e.classList.toggle('on', car || !!(d[e.dataset.f] || [])[+e.dataset.i]); });
       UI.setText(root.querySelector('[data-sum]'), ATSC_RESULTS.ownOf(d));
       UI.setText(root.querySelector('[data-ofc]'), ATSC_RESULTS.fmtScore(sc[k].score));
       root.querySelectorAll('button').forEach(b => b.disabled = !ok);
-      root.querySelectorAll('.pen-btn[data-f="dis"]').forEach(b => { b.disabled = !ok || !d.p[1]; });   // DIS hanya setelah P2
+            root.querySelectorAll('.pen-btn[data-f="dis"]').forEach(b => { b.disabled = !ok || !(d.p[1] || (cr.p || [])[1]); });   // DIS hanya setelah P2
+      root.querySelectorAll('.pen-btn.carried').forEach(b => { b.disabled = true; });                                    // hukuman babak lalu terkunci
     });
     const be = $('jSent');
     UI.setText(be, rec.revision > 0 ? 'Tersimpan otomatis' : 'Belum ada input');
@@ -64,13 +66,15 @@
       else if (b.dataset.act === 'undo') d.tech[i] = Math.max(0, d.tech[i] - 1);
       else if (b.dataset.act === 'pen') {
         const f = b.dataset.f; d[f] = d[f] || [false, false];
-        if (f === 'dis' && !d.p[1]) return false;                 // diskualifikasi hanya setelah Peringatan 2
+                const cr = (a.carry && a.carry[side]) || {};
+        if ((cr[f] || [])[i]) return false;                        // hukuman dari babak sebelumnya tidak bisa diubah
+        if (f === 'dis' && !d.p[1] && !(cr.p || [])[1]) return false;   // diskualifikasi hanya setelah Peringatan 2
         d[f][i] = !d[f][i];
         if (f === 'p' && i === 1 && !d.p[1]) d.dis = [false];     // P2 dibatalkan -> DIS ikut batal
       }
       rec.submittedAt = Date.now(); rec.revision++;
       return true;
-    }, 'scores/' + no);   // tulis hanya data juri ini ke Firebase
+    });
     if (!done) UI.toast('Penilaian sedang ditutup.', 'err');
     render();
   });
