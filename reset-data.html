@@ -19,7 +19,7 @@
     <p class="back"><a href="index.html">‹ Kembali ke menu utama</a></p>
   </div>
 </main>
-<script src="js/arena-data.js"></script><script src="js/seni-data.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="js/firebase-sync.js"></script><script src="js/arena-data.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="js/firebase-sync.js"></script><script src="js/seni-data.js"></script>
 <script>
   const kw = document.getElementById('kw'), be = document.getElementById('bEmpty'), bd = document.getElementById('bDemo'), msg = document.getElementById('msg');
   kw.addEventListener('input', () => { const ok = kw.value.trim() === 'RESET'; be.disabled = bd.disabled = !ok; });
